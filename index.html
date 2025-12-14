@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Gesture Particle Drawing</title>
+    <title>Hand Physics Particle Sandbox</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -63,7 +63,7 @@
         }
         
         .sidebar {
-            width: 280px;
+            width: 300px;
             background: rgba(20, 20, 40, 0.85);
             padding: 20px;
             overflow-y: auto;
@@ -82,14 +82,14 @@
             padding-bottom: 5px;
         }
         
-        .shape-buttons {
+        .mode-buttons {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-bottom: 10px;
         }
         
-        .shape-btn {
+        .mode-btn {
             padding: 10px;
             background: rgba(30, 30, 60, 0.8);
             border: 1px solid rgba(100, 100, 200, 0.3);
@@ -100,12 +100,12 @@
             text-align: center;
         }
         
-        .shape-btn:hover {
+        .mode-btn:hover {
             background: rgba(40, 40, 80, 0.9);
             color: #ddd;
         }
         
-        .shape-btn.active {
+        .mode-btn.active {
             background: rgba(74, 158, 255, 0.3);
             border-color: #4a9eff;
             color: #fff;
@@ -161,6 +161,11 @@
         .gesture-info p {
             color: #aaa;
             line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        
+        .gesture-info strong {
+            color: #4a9eff;
         }
         
         .status-bar {
@@ -213,9 +218,10 @@
             border-radius: 50%;
         }
         
-        .gesture-drawing { background-color: #4CAF50; }
-        .gesture-erasing { background-color: #FF5722; }
-        .gesture-special { background-color: #2196F3; }
+        .gesture-grab { background-color: #4CAF50; }
+        .gesture-push { background-color: #2196F3; }
+        .gesture-pull { background-color: #9C27B0; }
+        .gesture-shape { background-color: #FF9800; }
         
         .loading {
             position: absolute;
@@ -246,6 +252,48 @@
             100% { transform: rotate(360deg); }
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            background: rgba(40, 40, 80, 0.8);
+            border: 1px solid rgba(100, 100, 200, 0.3);
+            color: #aaa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            background: rgba(60, 60, 100, 0.9);
+            color: #fff;
+        }
+        
+        .action-btn.danger {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: rgba(255, 68, 68, 0.5);
+        }
+        
+        .action-btn.danger:hover {
+            background: rgba(255, 68, 68, 0.3);
+        }
+        
+        .hand-visualizer {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
         @media (max-width: 1024px) {
             .container {
                 flex-direction: column;
@@ -262,14 +310,20 @@
                 width: 150px;
                 height: 113px;
             }
+            
+            .hand-visualizer {
+                top: 150px;
+                width: 150px;
+                height: 150px;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>Hand Gesture Particle Drawing</h1>
+        <h1>Hand Physics Particle Sandbox</h1>
         <div class="gesture-indicator">
-            <span class="gesture-icon gesture-drawing" id="gesture-icon"></span>
+            <span class="gesture-icon gesture-grab" id="gesture-icon"></span>
             <span id="gesture-status">Loading hand tracking...</span>
         </div>
     </header>
@@ -281,79 +335,79 @@
             <div class="camera-feed">
                 <video id="video" autoplay muted></video>
             </div>
+            
+            <canvas class="hand-visualizer" id="hand-canvas"></canvas>
         </div>
         
         <div class="sidebar">
             <div class="control-group">
-                <h2>Drawing Shapes</h2>
-                <div class="shape-buttons">
-                    <button class="shape-btn active" data-shape="heart">❤️ Heart</button>
-                    <button class="shape-btn" data-shape="circle">⭕ Circle</button>
-                    <button class="shape-btn" data-shape="star">⭐ Star</button>
-                    <button class="shape-btn" data-shape="spiral">🌀 Spiral</button>
-                    <button class="shape-btn" data-shape="square">⬛ Square</button>
-                    <button class="shape-btn" data-shape="flower">🌼 Flower</button>
-                    <button class="shape-btn" data-shape="triangle">▲ Triangle</button>
-                    <button class="shape-btn" data-shape="wave">🌊 Wave</button>
-                    <button class="shape-btn" data-shape="firework">🎆 Firework</button>
+                <h2>Interaction Modes</h2>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="grab">🤚 Grab & Move</button>
+                    <button class="mode-btn" data-mode="push">👐 Push & Repel</button>
+                    <button class="mode-btn" data-mode="pull">👆 Pull & Attract</button>
+                    <button class="mode-btn" data-mode="shape">✋ Shape & Form</button>
+                    <button class="mode-btn" data-mode="zoom">🔍 Zoom & Scale</button>
+                    <button class="mode-btn" data-mode="physics">⚛️ Physics Play</button>
                 </div>
             </div>
             
             <div class="control-group">
-                <h2>Drawing Controls</h2>
+                <h2>Particle Controls</h2>
                 <div class="slider-container">
-                    <label>Particle Size <span class="slider-value" id="size-value">8</span></label>
-                    <input type="range" id="size-slider" min="1" max="30" value="8" step="1">
+                    <label>Interaction Strength <span class="slider-value" id="strength-value">1.0</span></label>
+                    <input type="range" id="strength-slider" min="0.1" max="3" value="1.0" step="0.1">
                 </div>
                 
                 <div class="slider-container">
-                    <label>Drawing Speed <span class="slider-value" id="speed-value">50</span></label>
-                    <input type="range" id="speed-slider" min="10" max="200" value="50" step="10">
+                    <label>Particle Size <span class="slider-value" id="size-value">6</span></label>
+                    <input type="range" id="size-slider" min="1" max="20" value="6" step="0.5">
                 </div>
                 
                 <div class="slider-container">
-                    <label>Trail Length <span class="slider-value" id="trail-value">20</span></label>
-                    <input type="range" id="trail-slider" min="5" max="100" value="20" step="5">
+                    <label>Physics Gravity <span class="slider-value" id="gravity-value">0.5</span></label>
+                    <input type="range" id="gravity-slider" min="0" max="2" value="0.5" step="0.1">
                 </div>
                 
                 <div class="slider-container">
-                    <label>Color Intensity <span class="slider-value" id="color-value">1.0</span></label>
-                    <input type="range" id="color-slider" min="0.1" max="2" value="1.0" step="0.1">
+                    <label>Particle Count <span class="slider-value" id="count-value">500</span></label>
+                    <input type="range" id="count-slider" min="50" max="2000" value="500" step="50">
                 </div>
                 
-                <div style="margin-top: 15px;">
-                    <button id="clear-btn" style="width: 100%; padding: 12px; background: #ff4444; border: none; color: white; border-radius: 6px; cursor: pointer;">
-                        Clear All Particles
-                    </button>
+                <div class="action-buttons">
+                    <button class="action-btn" id="reset-btn">Reset Particles</button>
+                    <button class="action-btn danger" id="clear-btn">Clear All</button>
                 </div>
             </div>
             
             <div class="gesture-info">
                 <h3>Hand Gesture Controls</h3>
-                <p><strong>Open Hand (Palm facing camera):</strong> Draw selected shape at hand position</p>
-                <p><strong>Closed Fist:</strong> Erase particles near hand</p>
-                <p><strong>Peace Sign (✌️):</strong> Create explosion effect</p>
-                <p><strong>Thumbs Up (👍):</strong> Rainbow color mode</p>
-                <p><strong>Pointing (👆):</strong> Draw line/trail from finger</p>
-                <p>Move your hand in front of your camera to draw with particles.</p>
+                <p><strong>Open Palm 🤚:</strong> Grab particles and move them</p>
+                <p><strong>Closed Fist ✊:</strong> Push particles away</p>
+                <p><strong>Pinch 👌:</strong> Pull particles toward you</p>
+                <p><strong>Two Fingers ✌️:</strong> Rotate and shape particles</p>
+                <p><strong>Thumb Up 👍:</strong> Zoom in/scale up</p>
+                <p><strong>Thumb Down 👎:</strong> Zoom out/scale down</p>
+                <p><strong>Move hand:</strong> Control position in 3D space</p>
+                <p><strong>Rotate hand:</strong> Control rotation angle</p>
             </div>
         </div>
     </div>
     
     <div class="status-bar">
-        <div>Particles: <span id="particle-count">0</span> | FPS: <span id="fps-counter">0</span></div>
-        <div>Drawing: <span id="shape-name">Heart</span> | Gesture: <span id="current-gesture">None</span></div>
+        <div>Particles: <span id="particle-count">500</span> | FPS: <span id="fps-counter">0</span></div>
+        <div>Mode: <span id="mode-name">Grab & Move</span> | Force: <span id="force-value">0.00</span></div>
     </div>
     
     <div class="loading" id="loading-screen">
         <div class="spinner"></div>
-        <p>Initializing hand tracking and 3D particle system...</p>
+        <p>Initializing hand tracking and physics engine...</p>
         <p>Please allow camera access when prompted.</p>
     </div>
 
     <script>
-        // Main Three.js application
-        class HandDrawingSystem {
+        // Main Physics Particle System
+        class ParticlePhysicsSystem {
             constructor() {
                 // Scene setup
                 this.scene = new THREE.Scene();
@@ -364,75 +418,77 @@
                     alpha: true 
                 });
                 
-                // Particle systems
-                this.particles = new THREE.Group();
-                this.scene.add(this.particles);
-                this.particleCount = 0;
-                this.activeParticleSets = [];
-                this.maxParticles = 20000;
-                
-                // Drawing properties
-                this.particleSize = 8;
-                this.drawingSpeed = 50; // Particles per second
-                this.trailLength = 20;
-                this.colorIntensity = 1.0;
-                this.currentShape = 'heart';
-                this.shapes = {
-                    'heart': this.createHeartShape,
-                    'circle': this.createCircleShape,
-                    'star': this.createStarShape,
-                    'spiral': this.createSpiralShape,
-                    'square': this.createSquareShape,
-                    'flower': this.createFlowerShape,
-                    'triangle': this.createTriangleShape,
-                    'wave': this.createWaveShape,
-                    'firework': this.createFireworkShape
-                };
+                // Particle system
+                this.particles = [];
+                this.particleCount = 500;
+                this.particleSize = 6;
+                this.gravity = 0.5;
+                this.interactionStrength = 1.0;
+                this.physicsEnabled = true;
                 
                 // Hand tracking
                 this.hands = null;
                 this.videoElement = document.getElementById('video');
+                this.handCanvas = document.getElementById('hand-canvas');
+                this.handCtx = this.handCanvas.getContext('2d');
                 this.gestureStatus = document.getElementById('gesture-status');
                 this.gestureIcon = document.getElementById('gesture-icon');
-                this.lastGesture = 'none';
                 
                 // Hand state
                 this.handDetected = false;
-                this.handPosition = { x: 0, y: 0, z: -20 };
-                this.handRotation = { x: 0, y: 0, z: 0 };
-                this.lastHandPositions = [];
-                this.gestureState = {
-                    isDrawing: false,
-                    isErasing: false,
-                    isSpecial: false,
-                    isRainbow: false,
-                    isPointing: false
+                this.handPosition = new THREE.Vector3(0, 0, 0);
+                this.handVelocity = new THREE.Vector3(0, 0, 0);
+                this.lastHandPosition = new THREE.Vector3(0, 0, 0);
+                this.handRotation = new THREE.Vector3(0, 0, 0);
+                
+                // Gesture states
+                this.gestures = {
+                    isGrabbing: false,
+                    isPushing: false,
+                    isPulling: false,
+                    isShaping: false,
+                    isZoomingIn: false,
+                    isZoomingOut: false,
+                    isRotating: false
                 };
                 
-                // Drawing state
-                this.lastDrawTime = 0;
-                this.drawInterval = 1000 / this.drawingSpeed;
-                this.trailPoints = [];
+                // Interaction mode
+                this.currentMode = 'grab';
+                this.modes = {
+                    'grab': this.updateGrabMode.bind(this),
+                    'push': this.updatePushMode.bind(this),
+                    'pull': this.updatePullMode.bind(this),
+                    'shape': this.updateShapeMode.bind(this),
+                    'zoom': this.updateZoomMode.bind(this),
+                    'physics': this.updatePhysicsMode.bind(this)
+                };
                 
-                // Animation
+                // Shape formation
+                this.currentShape = 'sphere';
+                this.shapes = ['sphere', 'cube', 'plane', 'ring', 'wave', 'spiral'];
+                this.formingShape = false;
+                this.shapeParticles = [];
+                
+                // Physics
                 this.clock = new THREE.Clock();
                 this.frameCount = 0;
                 this.lastFpsUpdate = 0;
                 
                 // UI elements
                 this.sizeSlider = document.getElementById('size-slider');
-                this.speedSlider = document.getElementById('speed-slider');
-                this.trailSlider = document.getElementById('trail-slider');
-                this.colorSlider = document.getElementById('color-slider');
+                this.countSlider = document.getElementById('count-slider');
+                this.gravitySlider = document.getElementById('gravity-slider');
+                this.strengthSlider = document.getElementById('strength-slider');
                 this.sizeValue = document.getElementById('size-value');
-                this.speedValue = document.getElementById('speed-value');
-                this.trailValue = document.getElementById('trail-value');
-                this.colorValue = document.getElementById('color-value');
+                this.countValue = document.getElementById('count-value');
+                this.gravityValue = document.getElementById('gravity-value');
+                this.strengthValue = document.getElementById('strength-value');
                 this.particleCountDisplay = document.getElementById('particle-count');
                 this.fpsCounter = document.getElementById('fps-counter');
-                this.shapeName = document.getElementById('shape-name');
-                this.currentGestureDisplay = document.getElementById('current-gesture');
-                this.shapeButtons = document.querySelectorAll('.shape-btn');
+                this.modeName = document.getElementById('mode-name');
+                this.forceValue = document.getElementById('force-value');
+                this.modeButtons = document.querySelectorAll('.mode-btn');
+                this.resetButton = document.getElementById('reset-btn');
                 this.clearButton = document.getElementById('clear-btn');
                 this.loadingScreen = document.getElementById('loading-screen');
                 
@@ -440,95 +496,83 @@
             }
             
             init() {
-                // Setup Three.js
                 this.setupScene();
-                
-                // Setup event listeners
                 this.setupEventListeners();
-                
-                // Setup hand tracking
                 this.setupHandTracking();
-                
-                // Create background
-                this.createBackground();
-                
-                // Start animation loop
+                this.createParticles();
                 this.animate();
                 
-                // Hide loading screen after a delay
                 setTimeout(() => {
                     this.loadingScreen.style.display = 'none';
                 }, 2000);
             }
             
             setupScene() {
-                // Setup renderer
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(window.devicePixelRatio);
                 this.renderer.setClearColor(0x0a0a1a, 1);
                 
-                // Setup camera
                 this.camera.position.set(0, 0, 50);
                 this.camera.lookAt(0, 0, 0);
                 
-                // Add lights
+                // Add lighting
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
                 this.scene.add(ambientLight);
                 
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(10, 10, 10);
+                directionalLight.position.set(10, 20, 15);
                 this.scene.add(directionalLight);
                 
-                // Add subtle fog for depth
-                this.scene.fog = new THREE.Fog(0x0a0a1a, 50, 150);
+                // Add a subtle grid for reference
+                const gridHelper = new THREE.GridHelper(100, 50, 0x333333, 0x222222);
+                gridHelper.position.y = -20;
+                this.scene.add(gridHelper);
+                
+                // Setup hand canvas
+                this.handCanvas.width = 200;
+                this.handCanvas.height = 200;
             }
             
             setupEventListeners() {
-                // Window resize
                 window.addEventListener('resize', () => {
                     this.camera.aspect = window.innerWidth / window.innerHeight;
                     this.camera.updateProjectionMatrix();
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                 });
                 
-                // Slider controls
                 this.sizeSlider.addEventListener('input', (e) => {
-                    this.particleSize = parseInt(e.target.value);
+                    this.particleSize = parseFloat(e.target.value);
                     this.sizeValue.textContent = this.particleSize;
+                    this.updateParticleSizes();
                 });
                 
-                this.speedSlider.addEventListener('input', (e) => {
-                    this.drawingSpeed = parseInt(e.target.value);
-                    this.speedValue.textContent = this.drawingSpeed;
-                    this.drawInterval = 1000 / this.drawingSpeed;
+                this.countSlider.addEventListener('input', (e) => {
+                    const newCount = parseInt(e.target.value);
+                    this.countValue.textContent = newCount;
+                    this.resizeParticles(newCount);
                 });
                 
-                this.trailSlider.addEventListener('input', (e) => {
-                    this.trailLength = parseInt(e.target.value);
-                    this.trailValue.textContent = this.trailLength;
+                this.gravitySlider.addEventListener('input', (e) => {
+                    this.gravity = parseFloat(e.target.value);
+                    this.gravityValue.textContent = this.gravity;
                 });
                 
-                this.colorSlider.addEventListener('input', (e) => {
-                    this.colorIntensity = parseFloat(e.target.value);
-                    this.colorValue.textContent = this.colorIntensity;
+                this.strengthSlider.addEventListener('input', (e) => {
+                    this.interactionStrength = parseFloat(e.target.value);
+                    this.strengthValue.textContent = this.interactionStrength;
                 });
                 
-                // Shape buttons
-                this.shapeButtons.forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        const shape = e.target.dataset.shape;
-                        this.setShape(shape);
-                        
-                        // Update active button
-                        this.shapeButtons.forEach(btn => btn.classList.remove('active'));
+                this.modeButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const mode = e.target.dataset.mode;
+                        this.setMode(mode);
+                        this.modeButtons.forEach(b => b.classList.remove('active'));
                         e.target.classList.add('active');
                     });
                 });
                 
-                // Clear button
-                this.clearButton.addEventListener('click', () => {
-                    this.clearAllParticles();
-                });
+                this.resetButton.addEventListener('click', () => this.resetParticles());
+                this.clearButton.addEventListener('click', () => this.clearParticles());
             }
             
             setupHandTracking() {
@@ -547,7 +591,6 @@
                 
                 this.hands.onResults(this.onHandResults.bind(this));
                 
-                // Start camera
                 const camera = new Camera(this.videoElement, {
                     onFrame: async () => {
                         await this.hands.send({ image: this.videoElement });
@@ -560,53 +603,108 @@
             }
             
             onHandResults(results) {
+                // Clear hand canvas
+                this.handCtx.clearRect(0, 0, this.handCanvas.width, this.handCanvas.height);
+                
                 if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                     const landmarks = results.multiHandLandmarks[0];
                     const handedness = results.multiHandedness[0].label;
                     
                     this.handDetected = true;
                     
-                    // Calculate hand center position (using palm base landmarks)
-                    const wrist = landmarks[0];
-                    const indexMCP = landmarks[5];
-                    const pinkyMCP = landmarks[17];
+                    // Calculate hand center (palm)
+                    const palmBase = landmarks[0]; // Wrist
+                    const middleBase = landmarks[9]; // Middle finger MCP
                     
-                    // Convert to 3D space
-                    const screenX = (wrist.x + indexMCP.x + pinkyMCP.x) / 3;
-                    const screenY = (wrist.y + indexMCP.y + pinkyMCP.y) / 3;
-                    const depth = wrist.z;
+                    // Convert to 3D coordinates
+                    const screenX = (palmBase.x + middleBase.x) / 2;
+                    const screenY = (palmBase.y + middleBase.y) / 2;
                     
-                    // Map to 3D world coordinates
-                    this.handPosition.x = (screenX - 0.5) * 40;
-                    this.handPosition.y = -(screenY - 0.5) * 30;
-                    this.handPosition.z = depth * 50 - 30;
+                    // Update hand position (smoothed)
+                    const targetX = (screenX - 0.5) * 40;
+                    const targetY = -(screenY - 0.5) * 30;
+                    const targetZ = (palmBase.z - 0.5) * 60;
                     
-                    // Store hand position for trail
-                    this.lastHandPositions.unshift({
-                        x: this.handPosition.x,
-                        y: this.handPosition.y,
-                        z: this.handPosition.z,
-                        time: Date.now()
-                    });
+                    // Smooth movement
+                    this.handPosition.x += (targetX - this.handPosition.x) * 0.3;
+                    this.handPosition.y += (targetY - this.handPosition.y) * 0.3;
+                    this.handPosition.z += (targetZ - this.handPosition.z) * 0.3;
                     
-                    // Keep only recent positions
-                    if (this.lastHandPositions.length > 10) {
-                        this.lastHandPositions.pop();
+                    // Calculate velocity
+                    const deltaTime = this.clock.getDelta();
+                    if (deltaTime > 0) {
+                        this.handVelocity.x = (this.handPosition.x - this.lastHandPosition.x) / deltaTime;
+                        this.handVelocity.y = (this.handPosition.y - this.lastHandPosition.y) / deltaTime;
+                        this.handVelocity.z = (this.handPosition.z - this.lastHandPosition.z) / deltaTime;
                     }
+                    this.lastHandPosition.copy(this.handPosition);
+                    
+                    // Calculate hand rotation from landmarks
+                    const indexTip = landmarks[8];
+                    const pinkyTip = landmarks[20];
+                    const dx = indexTip.x - pinkyTip.x;
+                    const dy = indexTip.y - pinkyTip.y;
+                    this.handRotation.z = Math.atan2(dy, dx);
                     
                     // Detect gestures
-                    this.detectGestures(landmarks, handedness);
+                    this.detectGestures(landmarks);
+                    
+                    // Draw hand skeleton on canvas
+                    this.drawHandSkeleton(landmarks);
+                    
                 } else {
                     this.handDetected = false;
                     this.gestureStatus.textContent = "No hand detected";
                     this.gestureIcon.className = "gesture-icon";
-                    this.currentGestureDisplay.textContent = "None";
-                    this.lastGesture = 'none';
                 }
             }
             
-            detectGestures(landmarks, handedness) {
-                // Get key landmarks
+            drawHandSkeleton(landmarks) {
+                this.handCtx.strokeStyle = '#4a9eff';
+                this.handCtx.lineWidth = 2;
+                this.handCtx.fillStyle = 'rgba(74, 158, 255, 0.5)';
+                
+                // Draw connections
+                const connections = [
+                    [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
+                    [0, 5], [5, 6], [6, 7], [7, 8], // Index
+                    [0, 9], [9, 10], [10, 11], [11, 12], // Middle
+                    [0, 13], [13, 14], [14, 15], [15, 16], // Ring
+                    [0, 17], [17, 18], [18, 19], [19, 20]  // Pinky
+                ];
+                
+                connections.forEach(([start, end]) => {
+                    const startPoint = landmarks[start];
+                    const endPoint = landmarks[end];
+                    
+                    this.handCtx.beginPath();
+                    this.handCtx.moveTo(startPoint.x * this.handCanvas.width, startPoint.y * this.handCanvas.height);
+                    this.handCtx.lineTo(endPoint.x * this.handCanvas.width, endPoint.y * this.handCanvas.height);
+                    this.handCtx.stroke();
+                });
+                
+                // Draw landmarks
+                landmarks.forEach((landmark, i) => {
+                    const x = landmark.x * this.handCanvas.width;
+                    const y = landmark.y * this.handCanvas.height;
+                    
+                    this.handCtx.beginPath();
+                    this.handCtx.arc(x, y, 4, 0, Math.PI * 2);
+                    
+                    // Color code based on finger
+                    if (i === 0) this.handCtx.fillStyle = '#ff4444'; // Wrist
+                    else if (i <= 4) this.handCtx.fillStyle = '#4CAF50'; // Thumb
+                    else if (i <= 8) this.handCtx.fillStyle = '#2196F3'; // Index
+                    else if (i <= 12) this.handCtx.fillStyle = '#FF9800'; // Middle
+                    else if (i <= 16) this.handCtx.fillStyle = '#9C27B0'; // Ring
+                    else this.handCtx.fillStyle = '#FF5722'; // Pinky
+                    
+                    this.handCtx.fill();
+                });
+            }
+            
+            detectGestures(landmarks) {
+                // Get key points
                 const thumbTip = landmarks[4];
                 const indexTip = landmarks[8];
                 const middleTip = landmarks[12];
@@ -614,73 +712,76 @@
                 const pinkyTip = landmarks[20];
                 const wrist = landmarks[0];
                 
-                // Calculate distances from wrist
+                // Calculate distances
                 const distances = {
-                    thumb: this.distance(thumbTip, wrist),
-                    index: this.distance(indexTip, wrist),
-                    middle: this.distance(middleTip, wrist),
-                    ring: this.distance(ringTip, wrist),
-                    pinky: this.distance(pinkyTip, wrist)
+                    thumb: this.calculateDistance(thumbTip, wrist),
+                    index: this.calculateDistance(indexTip, wrist),
+                    middle: this.calculateDistance(middleTip, wrist),
+                    ring: this.calculateDistance(ringTip, wrist),
+                    pinky: this.calculateDistance(pinkyTip, wrist)
                 };
                 
                 const avgDistance = (distances.thumb + distances.index + distances.middle + distances.ring + distances.pinky) / 5;
                 
-                // Reset gesture states
-                this.gestureState.isDrawing = false;
-                this.gestureState.isErasing = false;
-                this.gestureState.isSpecial = false;
-                this.gestureState.isRainbow = false;
-                this.gestureState.isPointing = false;
+                // Reset gestures
+                Object.keys(this.gestures).forEach(key => this.gestures[key] = false);
                 
                 let gestureName = "Open Hand";
-                let gestureType = "drawing";
+                let gestureType = "grab";
                 
-                // Detect closed fist (all fingers close to wrist)
-                if (distances.index < avgDistance * 0.6 && 
-                    distances.middle < avgDistance * 0.6 &&
-                    distances.ring < avgDistance * 0.6) {
-                    this.gestureState.isErasing = true;
-                    gestureName = "Closed Fist (Erasing)";
-                    gestureType = "erasing";
+                // Detect pinch (thumb and index close)
+                const pinchDistance = this.calculateDistance(thumbTip, indexTip);
+                if (pinchDistance < 0.05) {
+                    this.gestures.isPulling = true;
+                    gestureName = "Pinch 👌 (Pull)";
+                    gestureType = "pull";
+                }
+                // Detect closed fist
+                else if (distances.index < avgDistance * 0.6 && 
+                         distances.middle < avgDistance * 0.6) {
+                    this.gestures.isPushing = true;
+                    gestureName = "Closed Fist ✊ (Push)";
+                    gestureType = "push";
                 }
                 // Detect peace sign (index and middle extended)
-                else if (distances.index > avgDistance * 1.4 && 
-                         distances.middle > avgDistance * 1.4 &&
-                         distances.ring < avgDistance * 0.8 &&
-                         distances.pinky < avgDistance * 0.8) {
-                    this.gestureState.isSpecial = true;
-                    gestureName = "Peace Sign ✌️";
-                    gestureType = "special";
+                else if (distances.index > avgDistance * 1.3 && 
+                         distances.middle > avgDistance * 1.3 &&
+                         distances.ring < avgDistance * 0.8) {
+                    this.gestures.isShaping = true;
+                    gestureName = "Two Fingers ✌️ (Shape)";
+                    gestureType = "shape";
                 }
-                // Detect thumbs up (thumb extended, others closed)
-                else if (distances.thumb > avgDistance * 1.5 &&
-                         distances.index < avgDistance * 0.7 &&
-                         distances.middle < avgDistance * 0.7) {
-                    this.gestureState.isRainbow = true;
-                    gestureName = "Thumbs Up 👍";
-                    gestureType = "special";
+                // Detect thumb up (thumb extended, others relaxed)
+                else if (distances.thumb > avgDistance * 1.4 &&
+                         distances.index < avgDistance * 1.1) {
+                    this.gestures.isZoomingIn = true;
+                    gestureName = "Thumb Up 👍 (Zoom In)";
+                    gestureType = "grab";
                 }
-                // Detect pointing (only index extended)
-                else if (distances.index > avgDistance * 1.4 &&
-                         distances.middle < avgDistance * 0.8 &&
-                         distances.thumb < avgDistance * 1.0) {
-                    this.gestureState.isPointing = true;
-                    gestureName = "Pointing 👆";
-                    gestureType = "special";
+                // Detect thumb down (thumb down, palm facing away)
+                else if (thumbTip.y > wrist.y + 0.1 &&
+                         distances.thumb > avgDistance * 1.2) {
+                    this.gestures.isZoomingOut = true;
+                    gestureName = "Thumb Down 👎 (Zoom Out)";
+                    gestureType = "grab";
                 }
                 // Default open hand
                 else {
-                    this.gestureState.isDrawing = true;
-                    gestureName = "Open Hand (Drawing)";
-                    gestureType = "drawing";
+                    this.gestures.isGrabbing = true;
+                    gestureName = "Open Hand 🤚 (Grab)";
+                    gestureType = "grab";
                 }
                 
                 // Update UI
                 this.updateGestureUI(gestureType, gestureName);
-                this.currentGestureDisplay.textContent = gestureName;
+                this.forceValue.textContent = Math.sqrt(
+                    this.handVelocity.x * this.handVelocity.x +
+                    this.handVelocity.y * this.handVelocity.y +
+                    this.handVelocity.z * this.handVelocity.z
+                ).toFixed(2);
             }
             
-            distance(point1, point2) {
+            calculateDistance(point1, point2) {
                 const dx = point1.x - point2.x;
                 const dy = point1.y - point2.y;
                 const dz = point1.z - point2.z;
@@ -688,473 +789,441 @@
             }
             
             updateGestureUI(gestureType, gestureText) {
-                if (this.lastGesture !== gestureType) {
-                    this.gestureStatus.textContent = gestureText;
-                    this.gestureIcon.className = "gesture-icon";
-                    
-                    if (gestureType === 'drawing') {
-                        this.gestureIcon.classList.add('gesture-drawing');
-                    } else if (gestureType === 'erasing') {
-                        this.gestureIcon.classList.add('gesture-erasing');
-                    } else if (gestureType === 'special') {
-                        this.gestureIcon.classList.add('gesture-special');
+                this.gestureStatus.textContent = gestureText;
+                this.gestureIcon.className = "gesture-icon";
+                
+                if (gestureType === 'grab') {
+                    this.gestureIcon.classList.add('gesture-grab');
+                } else if (gestureType === 'push') {
+                    this.gestureIcon.classList.add('gesture-push');
+                } else if (gestureType === 'pull') {
+                    this.gestureIcon.classList.add('gesture-pull');
+                } else if (gestureType === 'shape') {
+                    this.gestureIcon.classList.add('gesture-shape');
+                }
+            }
+            
+            setMode(mode) {
+                this.currentMode = mode;
+                const modeNames = {
+                    'grab': 'Grab & Move',
+                    'push': 'Push & Repel',
+                    'pull': 'Pull & Attract',
+                    'shape': 'Shape & Form',
+                    'zoom': 'Zoom & Scale',
+                    'physics': 'Physics Play'
+                };
+                this.modeName.textContent = modeNames[mode] || mode;
+            }
+            
+            createParticles() {
+                // Clear existing particles
+                this.particles.forEach(particle => {
+                    this.scene.remove(particle.mesh);
+                    particle.geometry.dispose();
+                    particle.material.dispose();
+                });
+                this.particles = [];
+                
+                // Create new particles
+                for (let i = 0; i < this.particleCount; i++) {
+                    this.createParticle(i);
+                }
+                
+                this.particleCountDisplay.textContent = this.particleCount;
+            }
+            
+            createParticle(index) {
+                // Random position in a sphere
+                const radius = 20;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                const x = radius * Math.sin(phi) * Math.cos(theta);
+                const y = radius * Math.sin(phi) * Math.sin(theta);
+                const z = radius * Math.cos(phi);
+                
+                // Random velocity
+                const vx = (Math.random() - 0.5) * 2;
+                const vy = (Math.random() - 0.5) * 2;
+                const vz = (Math.random() - 0.5) * 2;
+                
+                // Random color based on position
+                const hue = ((x + y + z) / 60) % 1;
+                const color = new THREE.Color().setHSL(hue, 0.8, 0.6);
+                
+                // Create geometry
+                const geometry = new THREE.SphereGeometry(this.particleSize / 10, 8, 8);
+                const material = new THREE.MeshPhongMaterial({
+                    color: color,
+                    shininess: 30,
+                    emissive: color.clone().multiplyScalar(0.2)
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(x, y, z);
+                
+                this.scene.add(mesh);
+                
+                // Store particle data
+                this.particles.push({
+                    mesh: mesh,
+                    position: new THREE.Vector3(x, y, z),
+                    velocity: new THREE.Vector3(vx, vy, vz),
+                    acceleration: new THREE.Vector3(0, 0, 0),
+                    color: color,
+                    originalPosition: new THREE.Vector3(x, y, z),
+                    size: this.particleSize / 10,
+                    mass: 1
+                });
+            }
+            
+            resizeParticles(newCount) {
+                if (newCount > this.particleCount) {
+                    // Add more particles
+                    for (let i = this.particleCount; i < newCount; i++) {
+                        this.createParticle(i);
                     }
-                    
-                    this.lastGesture = gestureType;
-                }
-            }
-            
-            setShape(shapeName) {
-                this.currentShape = shapeName;
-                this.shapeName.textContent = shapeName.charAt(0).toUpperCase() + shapeName.slice(1);
-            }
-            
-            createHeartShape(count = 100, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    const t = (i / count) * Math.PI * 2;
-                    const scale = size * (0.8 + Math.random() * 0.4);
-                    
-                    // Heart parametric equations
-                    const x = scale * 16 * Math.pow(Math.sin(t), 3);
-                    const y = scale * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
-                    
-                    particles.push({
-                        x: position.x + x * 0.03,
-                        y: position.y - y * 0.03,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                }
-                return particles;
-            }
-            
-            createCircleShape(count = 100, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    const angle = (i / count) * Math.PI * 2;
-                    const radius = size * (0.9 + Math.random() * 0.2);
-                    
-                    particles.push({
-                        x: position.x + Math.cos(angle) * radius,
-                        y: position.y + Math.sin(angle) * radius,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                }
-                return particles;
-            }
-            
-            createStarShape(count = 100, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                const points = 5;
-                for (let i = 0; i < count; i++) {
-                    const angle = (i / count) * Math.PI * 2;
-                    const radius = size * (0.5 + 0.5 * Math.abs(Math.sin(angle * points / 2)));
-                    
-                    particles.push({
-                        x: position.x + Math.cos(angle) * radius,
-                        y: position.y + Math.sin(angle) * radius,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                }
-                return particles;
-            }
-            
-            createSpiralShape(count = 200, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    const t = (i / count) * Math.PI * 8;
-                    const radius = (i / count) * size * 2;
-                    
-                    particles.push({
-                        x: position.x + Math.cos(t) * radius,
-                        y: position.y + Math.sin(t) * radius,
-                        z: position.z + (i / count - 0.5) * 10
-                    });
-                }
-                return particles;
-            }
-            
-            createSquareShape(count = 100, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                const sideLength = size * 2;
-                const particlesPerSide = Math.floor(count / 4);
-                
-                // Create square edges
-                for (let i = 0; i < particlesPerSide; i++) {
-                    // Top
-                    particles.push({
-                        x: position.x + (i / particlesPerSide - 0.5) * sideLength,
-                        y: position.y + size,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                    // Bottom
-                    particles.push({
-                        x: position.x + (i / particlesPerSide - 0.5) * sideLength,
-                        y: position.y - size,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                    // Left
-                    particles.push({
-                        x: position.x - size,
-                        y: position.y + (i / particlesPerSide - 0.5) * sideLength,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                    // Right
-                    particles.push({
-                        x: position.x + size,
-                        y: position.y + (i / particlesPerSide - 0.5) * sideLength,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
-                }
-                
-                return particles.slice(0, count);
-            }
-            
-            createFlowerShape(count = 150, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                const petals = 6;
-                for (let i = 0; i < count; i++) {
-                    const t = (i / count) * Math.PI * 2;
-                    const radius = size * (1 + 0.3 * Math.sin(t * petals));
-                    
-                    particles.push({
-                        x: position.x + Math.cos(t) * radius,
-                        y: position.y + Math.sin(t) * radius,
-                        z: position.z + (Math.random() - 0.5) * 3
-                    });
-                }
-                return particles;
-            }
-            
-            createTriangleShape(count = 100, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    const t = (i / count) * 3;
-                    const side = Math.floor(t);
-                    const pos = t - side;
-                    
-                    let x, y;
-                    if (side === 0) { // Left side
-                        x = -size + pos * size;
-                        y = size - pos * 2 * size;
-                    } else if (side === 1) { // Right side
-                        x = size - pos * size;
-                        y = -size + pos * 2 * size;
-                    } else { // Bottom side
-                        x = size - pos * 2 * size;
-                        y = -size;
+                } else if (newCount < this.particleCount) {
+                    // Remove particles
+                    for (let i = newCount; i < this.particleCount; i++) {
+                        const particle = this.particles[i];
+                        this.scene.remove(particle.mesh);
+                        particle.geometry.dispose();
+                        particle.material.dispose();
                     }
-                    
-                    particles.push({
-                        x: position.x + x,
-                        y: position.y + y,
-                        z: position.z + (Math.random() - 0.5) * 2
-                    });
+                    this.particles = this.particles.slice(0, newCount);
                 }
-                return particles;
-            }
-            
-            createWaveShape(count = 200, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    const x = (i / count - 0.5) * size * 4;
-                    const y = Math.sin(x * 0.5) * size;
-                    
-                    particles.push({
-                        x: position.x + x,
-                        y: position.y + y,
-                        z: position.z + (Math.random() - 0.5) * 3
-                    });
-                }
-                return particles;
-            }
-            
-            createFireworkShape(count = 300, position = {x: 0, y: 0, z: 0}, size = 5) {
-                const particles = [];
-                for (let i = 0; i < count; i++) {
-                    // Random spherical explosion
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    const theta = Math.random() * Math.PI * 2;
-                    const radius = size * (0.5 + Math.random() * 1.5);
-                    
-                    particles.push({
-                        x: position.x + radius * Math.sin(phi) * Math.cos(theta),
-                        y: position.y + radius * Math.sin(phi) * Math.sin(theta),
-                        z: position.z + radius * Math.cos(phi)
-                    });
-                }
-                return particles;
-            }
-            
-            createBackground() {
-                // Add subtle grid for reference
-                const gridHelper = new THREE.GridHelper(100, 50, 0x444444, 0x222222);
-                gridHelper.position.y = -15;
-                this.scene.add(gridHelper);
                 
-                // Add distant stars
-                const starCount = 300;
-                const starGeometry = new THREE.BufferGeometry();
-                const starPositions = [];
-                const starColors = [];
-                
-                for (let i = 0; i < starCount; i++) {
-                    const radius = 80 + Math.random() * 100;
-                    const theta = Math.random() * Math.PI * 2;
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    
-                    starPositions.push(
-                        radius * Math.sin(phi) * Math.cos(theta),
-                        radius * Math.sin(phi) * Math.sin(theta),
-                        radius * Math.cos(phi)
+                this.particleCount = newCount;
+                this.particleCountDisplay.textContent = this.particleCount;
+            }
+            
+            updateParticleSizes() {
+                this.particles.forEach(particle => {
+                    const newSize = this.particleSize / 10;
+                    particle.mesh.geometry.dispose();
+                    particle.mesh.geometry = new THREE.SphereGeometry(newSize, 8, 8);
+                    particle.size = newSize;
+                });
+            }
+            
+            resetParticles() {
+                this.particles.forEach(particle => {
+                    particle.position.copy(particle.originalPosition);
+                    particle.velocity.set(
+                        (Math.random() - 0.5) * 2,
+                        (Math.random() - 0.5) * 2,
+                        (Math.random() - 0.5) * 2
                     );
-                    
-                    const brightness = 0.1 + Math.random() * 0.2;
-                    starColors.push(brightness, brightness, brightness);
-                }
-                
-                starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-                starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
-                
-                const starMaterial = new THREE.PointsMaterial({
-                    size: 1.5,
-                    vertexColors: true,
-                    transparent: true,
-                    opacity: 0.6
+                    particle.acceleration.set(0, 0, 0);
+                    particle.mesh.position.copy(particle.position);
                 });
-                
-                const stars = new THREE.Points(starGeometry, starMaterial);
-                this.scene.add(stars);
             }
             
-            createParticle(x, y, z, color = null) {
-                if (this.particleCount >= this.maxParticles) {
-                    // Remove oldest particle set if we're at capacity
-                    if (this.activeParticleSets.length > 0) {
-                        const oldestSet = this.activeParticleSets.shift();
-                        this.particles.remove(oldestSet);
-                        oldestSet.geometry.dispose();
-                        oldestSet.material.dispose();
-                        this.particleCount -= oldestSet.geometry.attributes.position.count / 3;
-                    }
-                }
-                
-                // Create color
-                let particleColor;
-                if (this.gestureState.isRainbow) {
-                    // Rainbow colors based on position and time
-                    const time = this.clock.getElapsedTime();
-                    const hue = ((Math.sin(x * 0.1 + y * 0.05 + time) * 0.5 + 0.5) * 360) % 360;
-                    particleColor = this.hslToRgb(hue / 360, 0.8, 0.6);
-                } else if (color) {
-                    particleColor = color;
-                } else {
-                    // Default color based on position
-                    const r = 0.5 + 0.5 * Math.sin(x * 0.2);
-                    const g = 0.5 + 0.5 * Math.cos(y * 0.2);
-                    const b = 0.5 + 0.5 * Math.sin((x + y) * 0.1);
-                    particleColor = { r, g, b };
-                }
-                
-                // Create geometry for single particle
-                const geometry = new THREE.BufferGeometry();
-                const positions = new Float32Array([x, y, z]);
-                const colors = new Float32Array([
-                    particleColor.r * this.colorIntensity,
-                    particleColor.g * this.colorIntensity,
-                    particleColor.b * this.colorIntensity
-                ]);
-                
-                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-                
-                // Create material
-                const material = new THREE.PointsMaterial({
-                    size: this.particleSize,
-                    vertexColors: true,
-                    transparent: true,
-                    opacity: 0.9,
-                    blending: THREE.AdditiveBlending
+            clearParticles() {
+                this.particles.forEach(particle => {
+                    this.scene.remove(particle.mesh);
+                    particle.geometry.dispose();
+                    particle.material.dispose();
                 });
-                
-                // Create points object
-                const points = new THREE.Points(geometry, material);
-                this.particles.add(points);
-                
-                // Store for cleanup
-                this.activeParticleSets.push(points);
-                this.particleCount++;
-                this.particleCountDisplay.textContent = this.particleCount;
-                
-                return points;
-            }
-            
-            createParticleGroup(positions, colors = null) {
-                if (positions.length === 0) return null;
-                
-                const geometry = new THREE.BufferGeometry();
-                const positionArray = new Float32Array(positions.length * 3);
-                const colorArray = new Float32Array(positions.length * 3);
-                
-                for (let i = 0; i < positions.length; i++) {
-                    const pos = positions[i];
-                    positionArray[i * 3] = pos.x;
-                    positionArray[i * 3 + 1] = pos.y;
-                    positionArray[i * 3 + 2] = pos.z;
-                    
-                    // Assign colors
-                    if (colors && colors[i]) {
-                        colorArray[i * 3] = colors[i].r * this.colorIntensity;
-                        colorArray[i * 3 + 1] = colors[i].g * this.colorIntensity;
-                        colorArray[i * 3 + 2] = colors[i].b * this.colorIntensity;
-                    } else {
-                        // Default color gradient
-                        const hue = (i / positions.length) * 360;
-                        const rgb = this.hslToRgb(hue / 360, 0.8, 0.6);
-                        colorArray[i * 3] = rgb.r * this.colorIntensity;
-                        colorArray[i * 3 + 1] = rgb.g * this.colorIntensity;
-                        colorArray[i * 3 + 2] = rgb.b * this.colorIntensity;
-                    }
-                }
-                
-                geometry.setAttribute('position', new THREE.BufferAttribute(positionArray, 3));
-                geometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
-                
-                const material = new THREE.PointsMaterial({
-                    size: this.particleSize,
-                    vertexColors: true,
-                    transparent: true,
-                    opacity: 0.8,
-                    blending: THREE.AdditiveBlending
-                });
-                
-                const points = new THREE.Points(geometry, material);
-                this.particles.add(points);
-                this.activeParticleSets.push(points);
-                this.particleCount += positions.length;
-                this.particleCountDisplay.textContent = this.particleCount;
-                
-                return points;
-            }
-            
-            hslToRgb(h, s, l) {
-                let r, g, b;
-                
-                if (s === 0) {
-                    r = g = b = l;
-                } else {
-                    const hue2rgb = (p, q, t) => {
-                        if (t < 0) t += 1;
-                        if (t > 1) t -= 1;
-                        if (t < 1/6) return p + (q - p) * 6 * t;
-                        if (t < 1/2) return q;
-                        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                        return p;
-                    };
-                    
-                    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                    const p = 2 * l - q;
-                    
-                    r = hue2rgb(p, q, h + 1/3);
-                    g = hue2rgb(p, q, h);
-                    b = hue2rgb(p, q, h - 1/3);
-                }
-                
-                return { r, g, b };
-            }
-            
-            drawShape() {
-                if (!this.handDetected) return;
-                
-                const currentTime = Date.now();
-                if (currentTime - this.lastDrawTime < this.drawInterval) return;
-                
-                this.lastDrawTime = currentTime;
-                
-                if (this.gestureState.isDrawing) {
-                    // Draw the selected shape
-                    const shapeFunction = this.shapes[this.currentShape];
-                    const particleCount = Math.floor(this.drawingSpeed / 10);
-                    const shapeParticles = shapeFunction.call(this, particleCount, this.handPosition, 3 + Math.random() * 2);
-                    
-                    this.createParticleGroup(shapeParticles);
-                }
-                else if (this.gestureState.isPointing) {
-                    // Draw trail from finger
-                    if (this.lastHandPositions.length >= 2) {
-                        const from = this.lastHandPositions[1];
-                        const to = this.lastHandPositions[0];
-                        
-                        // Create trail particles
-                        const trailPoints = [];
-                        const steps = 5;
-                        for (let i = 0; i < steps; i++) {
-                            const t = i / steps;
-                            trailPoints.push({
-                                x: from.x + (to.x - from.x) * t,
-                                y: from.y + (to.y - from.y) * t,
-                                z: from.z + (to.z - from.z) * t
-                            });
-                        }
-                        
-                        this.createParticleGroup(trailPoints);
-                    }
-                }
-                else if (this.gestureState.isSpecial) {
-                    // Special effects (peace sign)
-                    const explosionParticles = this.createFireworkShape(50, this.handPosition, 2);
-                    this.createParticleGroup(explosionParticles);
-                }
-            }
-            
-            eraseParticles() {
-                if (!this.handDetected || !this.gestureState.isErasing) return;
-                
-                const eraseRadius = 8;
-                const particlesToRemove = [];
-                
-                // Find particles near hand to erase
-                for (let i = this.activeParticleSets.length - 1; i >= 0; i--) {
-                    const particleSet = this.activeParticleSets[i];
-                    const positions = particleSet.geometry.attributes.position.array;
-                    
-                    for (let j = 0; j < positions.length; j += 3) {
-                        const dx = positions[j] - this.handPosition.x;
-                        const dy = positions[j + 1] - this.handPosition.y;
-                        const dz = positions[j + 2] - this.handPosition.z;
-                        const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                        
-                        if (distance < eraseRadius) {
-                            // Mark for removal
-                            particlesToRemove.push({ setIndex: i, particleIndex: j });
-                            break; // Remove entire set if any particle is close
-                        }
-                    }
-                }
-                
-                // Remove marked particle sets
-                particlesToRemove.forEach(({ setIndex }) => {
-                    const removedSet = this.activeParticleSets.splice(setIndex, 1)[0];
-                    this.particles.remove(removedSet);
-                    this.particleCount -= removedSet.geometry.attributes.position.count / 3;
-                    removedSet.geometry.dispose();
-                    removedSet.material.dispose();
-                });
-                
-                this.particleCountDisplay.textContent = this.particleCount;
-            }
-            
-            clearAllParticles() {
-                // Remove all particle sets
-                while (this.activeParticleSets.length > 0) {
-                    const particleSet = this.activeParticleSets.pop();
-                    this.particles.remove(particleSet);
-                    particleSet.geometry.dispose();
-                    particleSet.material.dispose();
-                }
-                
+                this.particles = [];
                 this.particleCount = 0;
                 this.particleCountDisplay.textContent = "0";
+            }
+            
+            updateGrabMode() {
+                if (!this.handDetected) return;
+                
+                const strength = this.interactionStrength * 2;
+                const grabRadius = 15;
+                
+                this.particles.forEach(particle => {
+                    const distance = particle.position.distanceTo(this.handPosition);
+                    
+                    if (distance < grabRadius && this.gestures.isGrabbing) {
+                        // Move particles with hand
+                        const force = new THREE.Vector3()
+                            .subVectors(this.handPosition, particle.position)
+                            .multiplyScalar(strength * 0.1);
+                        
+                        particle.acceleration.add(force);
+                        
+                        // Add some rotation
+                        particle.velocity.add(
+                            this.handVelocity.clone().multiplyScalar(0.05)
+                        );
+                    }
+                });
+            }
+            
+            updatePushMode() {
+                if (!this.handDetected) return;
+                
+                const strength = this.interactionStrength * 3;
+                const pushRadius = 20;
+                
+                this.particles.forEach(particle => {
+                    const distance = particle.position.distanceTo(this.handPosition);
+                    
+                    if (distance < pushRadius) {
+                        // Calculate push force (away from hand)
+                        const direction = new THREE.Vector3()
+                            .subVectors(particle.position, this.handPosition)
+                            .normalize();
+                        
+                        const force = distance < 5 ? 
+                            direction.multiplyScalar(strength * 2) :
+                            direction.multiplyScalar(strength / distance);
+                        
+                        // Apply force based on gesture
+                        if (this.gestures.isPushing) {
+                            particle.acceleration.add(force);
+                        }
+                    }
+                });
+            }
+            
+            updatePullMode() {
+                if (!this.handDetected) return;
+                
+                const strength = this.interactionStrength * 2;
+                const pullRadius = 25;
+                
+                this.particles.forEach(particle => {
+                    const distance = particle.position.distanceTo(this.handPosition);
+                    
+                    if (distance < pullRadius && this.gestures.isPulling) {
+                        // Calculate pull force (toward hand)
+                        const direction = new THREE.Vector3()
+                            .subVectors(this.handPosition, particle.position)
+                            .normalize();
+                        
+                        const force = direction.multiplyScalar(strength / (distance + 1));
+                        
+                        particle.acceleration.add(force);
+                        
+                        // Add swirl effect
+                        const swirl = new THREE.Vector3(
+                            -direction.y,
+                            direction.x,
+                            0
+                        ).multiplyScalar(strength * 0.1);
+                        
+                        particle.acceleration.add(swirl);
+                    }
+                });
+            }
+            
+            updateShapeMode() {
+                if (!this.handDetected) return;
+                
+                if (this.gestures.isShaping) {
+                    if (!this.formingShape) {
+                        this.formingShape = true;
+                        this.shapeParticles = [];
+                        this.currentShape = this.shapes[Math.floor(Math.random() * this.shapes.length)];
+                    }
+                    
+                    // Collect particles near hand
+                    const shapeRadius = 12;
+                    this.particles.forEach(particle => {
+                        if (particle.position.distanceTo(this.handPosition) < shapeRadius) {
+                            if (!this.shapeParticles.includes(particle)) {
+                                this.shapeParticles.push(particle);
+                            }
+                        }
+                    });
+                    
+                    // Form shape
+                    this.formShape();
+                } else {
+                    this.formingShape = false;
+                    this.shapeParticles = [];
+                }
+            }
+            
+            formShape() {
+                if (this.shapeParticles.length === 0) return;
+                
+                const center = this.handPosition.clone();
+                const radius = 8;
+                const time = this.clock.getElapsedTime();
+                
+                this.shapeParticles.forEach((particle, i) => {
+                    const t = i / this.shapeParticles.length * Math.PI * 2;
+                    const index = i / this.shapeParticles.length;
+                    
+                    let targetPosition;
+                    
+                    switch (this.currentShape) {
+                        case 'sphere':
+                            targetPosition = new THREE.Vector3(
+                                center.x + radius * Math.sin(t) * Math.cos(index * Math.PI),
+                                center.y + radius * Math.sin(t) * Math.sin(index * Math.PI),
+                                center.z + radius * Math.cos(t)
+                            );
+                            break;
+                        case 'cube':
+                            targetPosition = new THREE.Vector3(
+                                center.x + (Math.random() - 0.5) * radius * 2,
+                                center.y + (Math.random() - 0.5) * radius * 2,
+                                center.z + (Math.random() - 0.5) * radius * 2
+                            );
+                            break;
+                        case 'plane':
+                            targetPosition = new THREE.Vector3(
+                                center.x + (Math.random() - 0.5) * radius * 2,
+                                center.y,
+                                center.z + (Math.random() - 0.5) * radius * 2
+                            );
+                            break;
+                        case 'ring':
+                            targetPosition = new THREE.Vector3(
+                                center.x + radius * Math.cos(t),
+                                center.y,
+                                center.z + radius * Math.sin(t)
+                            );
+                            break;
+                        case 'wave':
+                            targetPosition = new THREE.Vector3(
+                                center.x + (index - 0.5) * radius * 2,
+                                center.y + Math.sin(index * 8 + time) * 4,
+                                center.z
+                            );
+                            break;
+                        case 'spiral':
+                            targetPosition = new THREE.Vector3(
+                                center.x + index * radius * Math.cos(index * 8),
+                                center.y + index * radius * 2,
+                                center.z + index * radius * Math.sin(index * 8)
+                            );
+                            break;
+                    }
+                    
+                    // Move toward target
+                    const force = new THREE.Vector3()
+                        .subVectors(targetPosition, particle.position)
+                        .multiplyScalar(this.interactionStrength * 0.1);
+                    
+                    particle.acceleration.add(force);
+                });
+            }
+            
+            updateZoomMode() {
+                if (!this.handDetected) return;
+                
+                const zoomSpeed = this.interactionStrength * 0.1;
+                
+                // Zoom camera based on hand Z position
+                if (this.gestures.isZoomingIn) {
+                    this.camera.position.z = Math.max(10, this.camera.position.z - zoomSpeed * 5);
+                } else if (this.gestures.isZoomingOut) {
+                    this.camera.position.z = Math.min(100, this.camera.position.z + zoomSpeed * 5);
+                }
+                
+                // Scale particles near hand
+                const scaleRadius = 15;
+                const scaleStrength = this.interactionStrength * 0.02;
+                
+                this.particles.forEach(particle => {
+                    const distance = particle.position.distanceTo(this.handPosition);
+                    
+                    if (distance < scaleRadius) {
+                        if (this.gestures.isZoomingIn) {
+                            // Scale up
+                            particle.size = Math.min(3, particle.size + scaleStrength);
+                        } else if (this.gestures.isZoomingOut) {
+                            // Scale down
+                            particle.size = Math.max(0.1, particle.size - scaleStrength);
+                        }
+                        
+                        // Update geometry
+                        particle.mesh.geometry.dispose();
+                        particle.mesh.geometry = new THREE.SphereGeometry(particle.size, 8, 8);
+                    }
+                });
+            }
+            
+            updatePhysicsMode() {
+                // In physics mode, just apply basic physics
+                if (this.handDetected && this.gestures.isGrabbing) {
+                    // Gentle interaction
+                    const physicsRadius = 18;
+                    
+                    this.particles.forEach(particle => {
+                        const distance = particle.position.distanceTo(this.handPosition);
+                        
+                        if (distance < physicsRadius) {
+                            const force = new THREE.Vector3()
+                                .subVectors(this.handPosition, particle.position)
+                                .multiplyScalar(this.interactionStrength * 0.05 / distance);
+                            
+                            particle.acceleration.add(force);
+                        }
+                    });
+                }
+            }
+            
+            updatePhysics() {
+                const deltaTime = Math.min(0.05, this.clock.getDelta());
+                
+                // Apply current mode
+                if (this.modes[this.currentMode]) {
+                    this.modes[this.currentMode]();
+                }
+                
+                // Update each particle
+                this.particles.forEach(particle => {
+                    // Apply gravity
+                    particle.acceleration.y -= this.gravity;
+                    
+                    // Update velocity and position
+                    particle.velocity.add(particle.acceleration.multiplyScalar(deltaTime));
+                    particle.position.add(particle.velocity.clone().multiplyScalar(deltaTime));
+                    
+                    // Apply damping
+                    particle.velocity.multiplyScalar(0.98);
+                    
+                    // Reset acceleration
+                    particle.acceleration.set(0, 0, 0);
+                    
+                    // Boundary collision
+                    const boundary = 30;
+                    const bounce = 0.7;
+                    
+                    if (particle.position.x < -boundary || particle.position.x > boundary) {
+                        particle.position.x = Math.max(-boundary, Math.min(boundary, particle.position.x));
+                        particle.velocity.x *= -bounce;
+                    }
+                    if (particle.position.y < -boundary || particle.position.y > boundary) {
+                        particle.position.y = Math.max(-boundary, Math.min(boundary, particle.position.y));
+                        particle.velocity.y *= -bounce;
+                    }
+                    if (particle.position.z < -boundary || particle.position.z > boundary) {
+                        particle.position.z = Math.max(-boundary, Math.min(boundary, particle.position.z));
+                        particle.velocity.z *= -bounce;
+                    }
+                    
+                    // Update mesh position
+                    particle.mesh.position.copy(particle.position);
+                    
+                    // Add subtle rotation for visual effect
+                    particle.mesh.rotation.x += particle.velocity.y * 0.01;
+                    particle.mesh.rotation.y += particle.velocity.x * 0.01;
+                });
+                
+                // Update camera to follow hand (slightly)
+                if (this.handDetected) {
+                    const targetCameraPos = new THREE.Vector3(
+                        this.handPosition.x * 0.1,
+                        this.handPosition.y * 0.1 + 10,
+                        this.camera.position.z
+                    );
+                    
+                    this.camera.position.lerp(targetCameraPos, 0.05);
+                    this.camera.lookAt(0, 0, 0);
+                }
             }
             
             updateFPS() {
@@ -1171,32 +1240,8 @@
             animate() {
                 requestAnimationFrame(() => this.animate());
                 
-                // Update based on hand gestures
-                if (this.handDetected) {
-                    this.drawShape();
-                    this.eraseParticles();
-                }
-                
-                // Animate particles (floating motion)
-                const time = this.clock.getElapsedTime();
-                this.particles.children.forEach((particleSet, index) => {
-                    const positions = particleSet.geometry.attributes.position.array;
-                    const age = time - (index / this.activeParticleSets.length) * 10;
-                    
-                    // Gentle floating animation
-                    for (let i = 0; i < positions.length; i += 3) {
-                        positions[i] += Math.sin(age + i * 0.01) * 0.01;
-                        positions[i + 1] += Math.cos(age + i * 0.01) * 0.01;
-                        positions[i + 2] += Math.sin(age * 0.5 + i * 0.02) * 0.005;
-                    }
-                    
-                    particleSet.geometry.attributes.position.needsUpdate = true;
-                });
-                
-                // Slowly rotate camera for better view
-                this.camera.position.x = Math.sin(time * 0.1) * 40;
-                this.camera.position.y = Math.sin(time * 0.05) * 10;
-                this.camera.lookAt(0, 0, 0);
+                // Update physics
+                this.updatePhysics();
                 
                 // Update FPS counter
                 this.updateFPS();
@@ -1206,9 +1251,9 @@
             }
         }
 
-        // Initialize the application when page loads
+        // Initialize the application
         window.addEventListener('DOMContentLoaded', () => {
-            const drawingSystem = new HandDrawingSystem();
+            new ParticlePhysicsSystem();
         });
     </script>
 </body>
