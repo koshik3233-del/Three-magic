@@ -3,903 +3,940 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iron Man Holographic Particle Interface</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <title>Hand-Controlled Particle Creation</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #000;
-            color: #fff;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+            color: #e0e0ff;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         
-        #three-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
-        .hud-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2;
-            pointer-events: none;
-            background: linear-gradient(180deg, 
-                rgba(255, 0, 0, 0.03) 0%,
-                rgba(255, 100, 0, 0.01) 50%,
-                rgba(255, 0, 0, 0.03) 100%);
-        }
-        
-        .hud-border {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 3;
-            pointer-events: none;
-            border: 2px solid rgba(255, 40, 40, 0.3);
-            box-shadow: 
-                inset 0 0 60px rgba(255, 0, 0, 0.2),
-                0 0 100px rgba(255, 0, 0, 0.1);
-            animation: borderPulse 4s infinite;
-        }
-        
-        @keyframes borderPulse {
-            0%, 100% { border-color: rgba(255, 40, 40, 0.3); }
-            50% { border-color: rgba(255, 100, 100, 0.5); }
-        }
-        
-        .hud-data {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 4;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            color: #ff4444;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-        }
-        
-        .hud-data div {
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .hud-label {
-            color: #ff9999;
-            margin-right: 10px;
-            min-width: 120px;
-        }
-        
-        .hud-value {
-            color: #ffffff;
-            font-weight: bold;
-        }
-        
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .jarvis-text {
-            color: #ff4444;
-            font-size: 24px;
+        header {
+            text-align: center;
             margin-bottom: 30px;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-            animation: textPulse 2s infinite;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        @keyframes textPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #4dffea, #ff4de3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(77, 255, 234, 0.2);
         }
         
-        .scan-line {
-            position: fixed;
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            flex: 2;
+            min-width: 600px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            background: #000;
+            min-height: 500px;
+        }
+        
+        #particleCanvas {
+            display: block;
+            background: #000;
+        }
+        
+        #webcamCanvas {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #ff4444, transparent);
-            z-index: 5;
-            pointer-events: none;
-            animation: scan 4s linear infinite;
-        }
-        
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-        
-        .hand-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 40, 40, 0.5);
-            padding: 10px 15px;
-            border-radius: 8px;
-            z-index: 4;
-            font-family: 'Courier New', monospace;
-            color: #ff4444;
-            font-size: 12px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .gesture-icon {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            margin-right: 8px;
-            background-color: #ff4444;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        
-        .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            height: 100%;
+            opacity: 0.3;
             z-index: 1;
-            background: 
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03) 1px, transparent 1px) 0 0 / 50px 50px,
-                linear-gradient(0deg, rgba(255, 0, 0, 0.03) 1px, transparent 1px) 0 0 / 50px 50px;
-            pointer-events: none;
         }
         
-        .particle-info {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 40, 40, 0.5);
+        .info-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(20, 20, 50, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4dffea;
+            border-bottom: 2px solid rgba(77, 255, 234, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .instructions {
+            background: rgba(30, 30, 70, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .instructions h3 {
+            color: #ff4de3;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .hand-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(30, 30, 70, 0.5);
+            border-radius: 8px;
+        }
+        
+        .hand-info p {
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        #handStatus {
+            font-weight: bold;
+            color: #4dffea;
+        }
+        
+        #particleCount {
+            font-weight: bold;
+            color: #ff4de3;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #4dffea, #ff4de3);
+            color: #0a0a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 5px 15px rgba(77, 255, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(77, 255, 234, 0.5);
+        }
+        
+        .mode-selector {
+            margin-top: 25px;
+        }
+        
+        .mode-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .mode-btn {
+            background: rgba(30, 30, 70, 0.8);
+            color: #e0e0ff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(90deg, #4dffea, #ff4de3);
+            color: #0a0a1a;
+            border-color: #4dffea;
+        }
+        
+        .mode-btn:hover:not(.active) {
+            border-color: #4dffea;
+        }
+        
+        .particle-types {
+            margin-top: 25px;
+        }
+        
+        .particle-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .particle-option {
+            background: rgba(30, 30, 70, 0.8);
             padding: 15px;
             border-radius: 8px;
-            z-index: 4;
-            font-family: 'Courier New', monospace;
-            color: #ff9999;
-            font-size: 11px;
-            backdrop-filter: blur(5px);
-            max-width: 300px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
         
-        .particle-info h3 {
-            color: #ff4444;
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 40, 40, 0.3);
-            padding-bottom: 5px;
+        .particle-option:hover {
+            border-color: #4dffea;
+            transform: scale(1.05);
         }
         
-        .hidden {
+        .particle-option.selected {
+            border-color: #ff4de3;
+            background: rgba(255, 77, 227, 0.1);
+        }
+        
+        .particle-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        .camera-feed {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #4dffea;
+            z-index: 2;
+            background: #000;
             display: none;
         }
         
-        .fps-counter {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: #ff9999;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            z-index: 4;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 40, 40, 0.3);
+        #cameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .warning {
+            color: #ff4d4d;
+            background: rgba(255, 77, 77, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 1000px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .canvas-container {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <canvas id="three-canvas"></canvas>
-    <div class="grid-overlay"></div>
-    <div class="hud-overlay"></div>
-    <div class="hud-border"></div>
-    <div class="scan-line"></div>
-    
-    <div class="hud-data">
-        <div><span class="hud-label">SYSTEM STATUS:</span><span class="hud-value">ACTIVE</span></div>
-        <div><span class="hud-label">PARTICLE COUNT:</span><span class="hud-value" id="particle-count">0</span></div>
-        <div><span class="hud-label">ENERGY LEVEL:</span><span class="hud-value" id="energy-level">100%</span></div>
-        <div><span class="hud-label">INTERFACE MODE:</span><span class="hud-value" id="interface-mode">HOLOGRAPHIC</span></div>
-        <div><span class="hud-label">GESTURE RECOG:</span><span class="hud-value" id="gesture-status">INITIALIZING</span></div>
-    </div>
-    
-    <div class="hand-indicator">
-        <span class="gesture-icon"></span>
-        <span id="hand-status">INITIALIZING HAND TRACKING...</span>
-    </div>
-    
-    <div class="particle-info">
-        <h3>PARTICLE INTERFACE v2.0</h3>
-        <p>Gestures: Open Hand - Swipe Particles ✋</p>
-        <p>Closed Fist - Form Sphere ✊</p>
-        <p>Two Fingers - Create Hologram ✌️</p>
-        <p>Pinch - Energy Burst 👌</p>
-        <p class="hidden" id="mobile-warning">For best experience, use desktop with webcam</p>
-    </div>
-    
-    <div class="fps-counter">
-        FPS: <span id="fps">0</span>
-    </div>
-    
-    <div class="loading" id="loading-screen">
-        <div class="jarvis-text">J.A.R.V.I.S. INITIALIZING</div>
-        <div style="color: #ff9999; margin-bottom: 20px;">HOLOGRAPHIC PARTICLE INTERFACE</div>
-        <div style="width: 300px; height: 2px; background: linear-gradient(90deg, transparent, #ff4444, transparent);"></div>
-        <div style="color: #ff6666; margin-top: 30px; font-size: 12px;">Please allow camera access for gesture control</div>
+    <div class="container">
+        <header>
+            <h1>Hand-Controlled Particle Creation</h1>
+            <p class="subtitle">Use your hands to create and manipulate particles in real-time</p>
+        </header>
+        
+        <div class="content">
+            <div class="canvas-container">
+                <canvas id="particleCanvas"></canvas>
+                <canvas id="webcamCanvas"></canvas>
+                <div class="camera-feed">
+                    <video id="cameraVideo" autoplay muted playsinline></video>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h2>Hand Gesture Controls</h2>
+                
+                <div class="instructions">
+                    <h3>How to Create with Your Hands</h3>
+                    <ul>
+                        <li><strong>Open Hand</strong>: Creates particles from your palm</li>
+                        <li><strong>Pinch (Thumb & Index)</strong>: Attracts particles to your fingers</li>
+                        <li><strong>Fist</strong>: Repels particles away from your hand</li>
+                        <li><strong>Two Fingers</strong>: Creates a trail of particles</li>
+                        <li><strong>Move Hands</strong>: Particles follow your hand movements</li>
+                    </ul>
+                </div>
+                
+                <div class="hand-info">
+                    <p>Hand Status: <span id="handStatus">Waiting for webcam access...</span></p>
+                    <p>Particles Created: <span id="particleCount">0</span></p>
+                    <p>Current Mode: <span id="currentMode">Particle Creation</span></p>
+                </div>
+                
+                <div class="mode-selector">
+                    <h2>Creation Mode</h2>
+                    <div class="mode-buttons">
+                        <div class="mode-btn active" data-mode="create">Create Particles</div>
+                        <div class="mode-btn" data-mode="manipulate">Manipulate Particles</div>
+                        <div class="mode-btn" data-mode="destroy">Clear Particles</div>
+                    </div>
+                </div>
+                
+                <div class="particle-types">
+                    <h2>Particle Types</h2>
+                    <div class="particle-options">
+                        <div class="particle-option selected" data-type="sparkle">
+                            <div class="particle-icon">✨</div>
+                            <div>Sparkles</div>
+                        </div>
+                        <div class="particle-option" data-type="orb">
+                            <div class="particle-icon">🔵</div>
+                            <div>Energy Orbs</div>
+                        </div>
+                        <div class="particle-option" data-type="star">
+                            <div class="particle-icon">⭐</div>
+                            <div>Stars</div>
+                        </div>
+                        <div class="particle-option" data-type="fire">
+                            <div class="particle-icon">🔥</div>
+                            <div>Fire Particles</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="startBtn">Start Webcam</button>
+                    <button id="clearBtn">Clear All</button>
+                    <button id="randomBtn">Randomize</button>
+                </div>
+                
+                <div class="warning">
+                    <p>Allow webcam access when prompted. Works best in a well-lit room.</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Hand-Controlled Particle System | Uses simulated hand tracking for demonstration</p>
+            <p>Move your hands in front of your webcam to create and manipulate particles</p>
+        </footer>
     </div>
 
     <script>
-        // Iron Man Holographic Particle System
-        class IronManParticleSystem {
-            constructor() {
-                // Full screen setup
-                this.scene = new THREE.Scene();
-                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-                this.renderer = new THREE.WebGLRenderer({ 
-                    canvas: document.getElementById('three-canvas'),
-                    antialias: true,
-                    alpha: true,
-                    powerPreference: "high-performance"
-                });
-                
-                // Iron Man color scheme
-                this.ironManColors = {
-                    primary: new THREE.Color(0xff4444),
-                    secondary: new THREE.Color(0xff9900),
-                    accent: new THREE.Color(0xffff00),
-                    energy: new THREE.Color(0x00ffff),
-                    hologram: new THREE.Color(0x6666ff)
-                };
-                
-                // Particle system
-                this.particles = [];
-                this.particleCount = 2000;
-                this.particleSize = 0.2;
-                this.particleGeometry = new THREE.SphereGeometry(this.particleSize, 4, 4);
-                
-                // Holographic modes
-                this.currentMode = 'holographic';
-                this.modes = {
-                    'holographic': this.updateHolographicMode.bind(this),
-                    'formation': this.updateFormationMode.bind(this),
-                    'energy': this.updateEnergyMode.bind(this),
-                    'interface': this.updateInterfaceMode.bind(this)
-                };
-                
-                // Hand tracking
-                this.hands = null;
-                this.handDetected = false;
-                this.handPosition = new THREE.Vector3(0, 0, -50);
-                this.handVelocity = new THREE.Vector3(0, 0, 0);
-                this.lastHandPosition = new THREE.Vector3(0, 0, 0);
-                
-                // Gesture states
-                this.gestures = {
-                    isOpenHand: false,
-                    isClosedFist: false,
-                    isTwoFingers: false,
-                    isPinching: false,
-                    isRotating: false
-                };
-                
-                // Holographic formations
-                this.formations = {
-                    'sphere': this.createSphereFormation.bind(this),
-                    'helmet': this.createHelmetFormation.bind(this),
-                    'arcReactor': this.createArcReactorFormation.bind(this),
-                    'hud': this.createHUDFormation.bind(this),
-                    'suit': this.createSuitFormation.bind(this)
-                };
-                this.currentFormation = 'sphere';
-                this.forming = false;
-                
-                // Energy fields
-                this.energyFields = [];
-                this.energyLevel = 100;
-                
-                // Animation
-                this.clock = new THREE.Clock();
-                this.time = 0;
-                this.frameCount = 0;
-                this.lastFpsUpdate = 0;
-                
-                // UI elements
-                this.loadingScreen = document.getElementById('loading-screen');
-                this.particleCountElement = document.getElementById('particle-count');
-                this.energyLevelElement = document.getElementById('energy-level');
-                this.interfaceModeElement = document.getElementById('interface-mode');
-                this.gestureStatusElement = document.getElementById('gesture-status');
-                this.handStatusElement = document.getElementById('hand-status');
-                this.fpsElement = document.getElementById('fps');
-                
-                this.init();
+        // Canvas setup
+        const particleCanvas = document.getElementById('particleCanvas');
+        const particleCtx = particleCanvas.getContext('2d');
+        const webcamCanvas = document.getElementById('webcamCanvas');
+        const webcamCtx = webcamCanvas.getContext('2d');
+        const cameraVideo = document.getElementById('cameraVideo');
+        const cameraFeed = document.querySelector('.camera-feed');
+        
+        // Set canvas size to match container
+        function resizeCanvas() {
+            const container = particleCanvas.parentElement;
+            particleCanvas.width = container.clientWidth;
+            particleCanvas.height = container.clientHeight;
+            webcamCanvas.width = container.clientWidth;
+            webcamCanvas.height = container.clientHeight;
+        }
+        
+        // Particle system variables
+        let particles = [];
+        let handPositions = [];
+        let isWebcamActive = false;
+        let animationId = null;
+        let lastHandUpdate = 0;
+        
+        // Configuration
+        let config = {
+            mode: 'create',
+            particleType: 'sparkle',
+            particleCount: 0,
+            handDetected: false,
+            showCameraFeed: false
+        };
+        
+        // Simulated hand data (since we can't implement real hand tracking without a library)
+        let simulatedHand = {
+            x: null,
+            y: null,
+            gesture: 'open',
+            visible: false
+        };
+        
+        // Initialize the particle system
+        function initParticles() {
+            particles = [];
+            config.particleCount = 0;
+            updateParticleCount();
+        }
+        
+        // Create a new particle
+        function createParticle(x, y, type = config.particleType) {
+            let particle = {
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                size: 5 + Math.random() * 10,
+                color: '',
+                life: 1,
+                maxLife: 1,
+                type: type,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1
+            };
+            
+            // Set color based on particle type
+            switch(type) {
+                case 'sparkle':
+                    particle.color = `hsl(${Math.random() * 60 + 50}, 100%, 70%)`;
+                    particle.size = 3 + Math.random() * 5;
+                    break;
+                case 'orb':
+                    particle.color = `hsl(${Math.random() * 60 + 180}, 100%, 60%)`;
+                    particle.size = 8 + Math.random() * 12;
+                    break;
+                case 'star':
+                    particle.color = `hsl(${Math.random() * 60 + 300}, 100%, 70%)`;
+                    particle.size = 6 + Math.random() * 8;
+                    break;
+                case 'fire':
+                    particle.color = `hsl(${Math.random() * 30 + 10}, 100%, 60%)`;
+                    particle.size = 4 + Math.random() * 6;
+                    break;
             }
             
-            init() {
-                this.setupScene();
-                this.setupHandTracking();
-                this.createParticleSystem();
-                this.createHolographicEffects();
-                this.animate();
+            particles.push(particle);
+            config.particleCount++;
+            updateParticleCount();
+        }
+        
+        // Update particle positions
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let particle = particles[i];
                 
-                // Hide loading after initialization
-                setTimeout(() => {
-                    this.loadingScreen.style.display = 'none';
-                }, 2500);
-            }
-            
-            setupScene() {
-                // Full screen renderer
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                this.renderer.setClearColor(0x000000, 1);
+                // Apply gravity
+                particle.vy += 0.05;
                 
-                // Camera positioned like Iron Man's HUD
-                this.camera.position.set(0, 0, 50);
-                this.camera.lookAt(0, 0, 0);
+                // Apply air resistance
+                particle.vx *= 0.99;
+                particle.vy *= 0.99;
                 
-                // Add dramatic lighting
-                const ambientLight = new THREE.AmbientLight(0xff4444, 0.2);
-                this.scene.add(ambientLight);
+                // Update position
+                particle.x += particle.vx;
+                particle.y += particle.vy;
                 
-                const pointLight1 = new THREE.PointLight(0xff4444, 2, 100);
-                pointLight1.position.set(20, 20, 20);
-                this.scene.add(pointLight1);
+                // Update rotation
+                particle.rotation += particle.rotationSpeed;
                 
-                const pointLight2 = new THREE.PointLight(0x00ffff, 1, 100);
-                pointLight2.position.set(-20, -20, 20);
-                this.scene.add(pointLight2);
+                // Decrease life
+                particle.life -= 0.005;
                 
-                // Add holographic grid
-                const gridHelper = new THREE.GridHelper(200, 100, 0xff4444, 0x330000);
-                gridHelper.position.y = -20;
-                gridHelper.material.opacity = 0.1;
-                gridHelper.material.transparent = true;
-                this.scene.add(gridHelper);
-                
-                // Create central energy core
-                this.createEnergyCore();
-                
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }
-            
-            createEnergyCore() {
-                // Create central energy source
-                const coreGeometry = new THREE.IcosahedronGeometry(5, 3);
-                const coreMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xff4444,
-                    transparent: true,
-                    opacity: 0.3,
-                    wireframe: true
-                });
-                
-                this.energyCore = new THREE.Mesh(coreGeometry, coreMaterial);
-                this.scene.add(this.energyCore);
-                
-                // Add energy pulses
-                const pulseGeometry = new THREE.SphereGeometry(1, 16, 16);
-                const pulseMaterial = new THREE.MeshBasicMaterial({
-                    color: 0xff4444,
-                    transparent: true,
-                    opacity: 0.5
-                });
-                
-                this.energyPulse = new THREE.Mesh(pulseGeometry, pulseMaterial);
-                this.scene.add(this.energyPulse);
-            }
-            
-            createParticleSystem() {
-                // Create particle pool
-                for (let i = 0; i < this.particleCount; i++) {
-                    this.createParticle(i);
+                // Remove dead particles
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                    config.particleCount--;
+                    continue;
                 }
                 
-                this.particleCountElement.textContent = this.particleCount;
-            }
-            
-            createParticle(index) {
-                // Create Iron Man style particle
-                const material = new THREE.MeshPhongMaterial({
-                    color: this.getParticleColor(index),
-                    emissive: this.getParticleColor(index).clone().multiplyScalar(0.5),
-                    shininess: 100,
-                    transparent: true,
-                    opacity: 0.8
-                });
-                
-                const particle = new THREE.Mesh(this.particleGeometry, material);
-                
-                // Initial random position in sphere
-                const radius = 30;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                
-                particle.position.set(
-                    radius * Math.sin(phi) * Math.cos(theta),
-                    radius * Math.sin(phi) * Math.sin(theta),
-                    radius * Math.cos(phi)
-                );
-                
-                // Store particle data
-                const particleData = {
-                    mesh: particle,
-                    originalPosition: particle.position.clone(),
-                    velocity: new THREE.Vector3(
-                        (Math.random() - 0.5) * 2,
-                        (Math.random() - 0.5) * 2,
-                        (Math.random() - 0.5) * 2
-                    ),
-                    targetPosition: particle.position.clone(),
-                    color: material.color,
-                    energy: 1,
-                    phase: Math.random() * Math.PI * 2,
-                    size: this.particleSize
-                };
-                
-                this.particles.push(particleData);
-                this.scene.add(particle);
-            }
-            
-            getParticleColor(index) {
-                // Create Iron Man color scheme
-                const colors = [
-                    this.ironManColors.primary,
-                    this.ironManColors.secondary,
-                    this.ironManColors.accent,
-                    this.ironManColors.energy
-                ];
-                
-                const colorIndex = Math.floor(index / (this.particleCount / colors.length));
-                return colors[colorIndex % colors.length].clone();
-            }
-            
-            createHolographicEffects() {
-                // Create holographic lines connecting particles
-                this.lineGeometry = new THREE.BufferGeometry();
-                const lineMaterial = new THREE.LineBasicMaterial({
-                    color: 0xff4444,
-                    transparent: true,
-                    opacity: 0.1,
-                    blending: THREE.AdditiveBlending
-                });
-                
-                this.holographicLines = new THREE.LineSegments(this.lineGeometry, lineMaterial);
-                this.scene.add(this.holographicLines);
-            }
-            
-            setupHandTracking() {
-                // Check if mobile device
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (isMobile) {
-                    this.handStatusElement.textContent = "DESKTOP RECOMMENDED FOR GESTURES";
-                    return;
-                }
-                
-                // Initialize MediaPipe Hands
-                this.hands = new Hands({
-                    locateFile: (file) => {
-                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                    }
-                });
-                
-                this.hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.7
-                });
-                
-                this.hands.onResults(this.onHandResults.bind(this));
-                
-                // Create video element for hand tracking
-                const video = document.createElement('video');
-                video.style.display = 'none';
-                document.body.appendChild(video);
-                
-                // Start camera
-                const camera = new Camera(video, {
-                    onFrame: async () => {
-                        if (this.hands) {
-                            await this.hands.send({ image: video });
+                // Handle hand interactions if hand is detected
+                if (simulatedHand.visible && simulatedHand.x && simulatedHand.y) {
+                    const dx = simulatedHand.x - particle.x;
+                    const dy = simulatedHand.y - particle.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Different interactions based on mode and gesture
+                    if (config.mode === 'create') {
+                        // In create mode, hands can attract particles
+                        if (distance < 150) {
+                            const force = 5 / distance;
+                            particle.vx += (dx / distance) * force;
+                            particle.vy += (dy / distance) * force;
                         }
-                    },
-                    width: 640,
-                    height: 480
-                });
-                
-                camera.start();
-            }
-            
-            onHandResults(results) {
-                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                    const landmarks = results.multiHandLandmarks[0];
-                    
-                    this.handDetected = true;
-                    
-                    // Calculate hand center (palm)
-                    const palmBase = landmarks[0];
-                    const middleBase = landmarks[9];
-                    
-                    // Map to 3D space
-                    const screenX = (palmBase.x + middleBase.x) / 2;
-                    const screenY = (palmBase.y + middleBase.y) / 2;
-                    
-                    // Update hand position (in front of camera)
-                    const targetX = (screenX - 0.5) * 100;
-                    const targetY = -(screenY - 0.5) * 80;
-                    const targetZ = -30;
-                    
-                    // Smooth movement
-                    this.handPosition.x += (targetX - this.handPosition.x) * 0.3;
-                    this.handPosition.y += (targetY - this.handPosition.y) * 0.3;
-                    this.handPosition.z = targetZ;
-                    
-                    // Calculate velocity
-                    const deltaTime = this.clock.getDelta();
-                    if (deltaTime > 0) {
-                        this.handVelocity.x = (this.handPosition.x - this.lastHandPosition.x) / deltaTime;
-                        this.handVelocity.y = (this.handPosition.y - this.lastHandPosition.y) / deltaTime;
-                        this.handVelocity.z = (this.handPosition.z - this.lastHandPosition.z) / deltaTime;
-                    }
-                    this.lastHandPosition.copy(this.handPosition);
-                    
-                    // Detect gestures
-                    this.detectGestures(landmarks);
-                    
-                    this.handStatusElement.textContent = "HAND TRACKING ACTIVE";
-                    this.gestureStatusElement.textContent = "ACTIVE";
-                    
-                } else {
-                    this.handDetected = false;
-                    this.handStatusElement.textContent = "AWAITING HAND INPUT";
-                    this.gestureStatusElement.textContent = "STANDBY";
-                }
-            }
-            
-            detectGestures(landmarks) {
-                const thumbTip = landmarks[4];
-                const indexTip = landmarks[8];
-                const middleTip = landmarks[12];
-                const ringTip = landmarks[16];
-                const pinkyTip = landmarks[20];
-                const wrist = landmarks[0];
-                
-                // Reset gestures
-                Object.keys(this.gestures).forEach(key => this.gestures[key] = false);
-                
-                // Calculate distances
-                const distances = {
-                    thumb: this.calculateDistance(thumbTip, wrist),
-                    index: this.calculateDistance(indexTip, wrist),
-                    middle: this.calculateDistance(middleTip, wrist),
-                    ring: this.calculateDistance(ringTip, wrist),
-                    pinky: this.calculateDistance(pinkyTip, wrist)
-                };
-                
-                const avgDistance = (distances.thumb + distances.index + distances.middle + distances.ring + distances.pinky) / 5;
-                
-                // Detect pinch (thumb and index close)
-                const pinchDistance = this.calculateDistance(thumbTip, indexTip);
-                if (pinchDistance < 0.05) {
-                    this.gestures.isPinching = true;
-                    this.currentMode = 'energy';
-                    this.interfaceModeElement.textContent = "ENERGY BURST";
-                }
-                // Detect closed fist
-                else if (distances.index < avgDistance * 0.6 && 
-                         distances.middle < avgDistance * 0.6) {
-                    this.gestures.isClosedFist = true;
-                    this.currentMode = 'formation';
-                    this.interfaceModeElement.textContent = "FORMATION MODE";
-                    this.currentFormation = 'sphere';
-                }
-                // Detect two fingers
-                else if (distances.index > avgDistance * 1.3 && 
-                         distances.middle > avgDistance * 1.3 &&
-                         distances.ring < avgDistance * 0.8) {
-                    this.gestures.isTwoFingers = true;
-                    this.currentMode = 'interface';
-                    this.interfaceModeElement.textContent = "HOLOGRAM UI";
-                    this.currentFormation = 'hud';
-                }
-                // Default open hand
-                else {
-                    this.gestures.isOpenHand = true;
-                    this.currentMode = 'holographic';
-                    this.interfaceModeElement.textContent = "HOLOGRAPHIC";
-                }
-            }
-            
-            calculateDistance(point1, point2) {
-                const dx = point1.x - point2.x;
-                const dy = point1.y - point2.y;
-                const dz = point1.z - point2.z;
-                return Math.sqrt(dx*dx + dy*dy + dz*dz);
-            }
-            
-            updateHolographicMode() {
-                // Iron Man's fluid, intelligent particle movement
-                this.time += this.clock.getDelta();
-                
-                this.particles.forEach((particle, i) => {
-                    // Base hovering motion
-                    const hover = Math.sin(this.time + particle.phase) * 0.5;
-                    
-                    // Gentle drift
-                    particle.velocity.x += (Math.random() - 0.5) * 0.01;
-                    particle.velocity.y += (Math.random() - 0.5) * 0.01;
-                    particle.velocity.z += (Math.random() - 0.5) * 0.01;
-                    
-                    // Limit velocity
-                    particle.velocity.clampLength(0, 2);
-                    
-                    // Apply velocity
-                    particle.mesh.position.add(particle.velocity);
-                    
-                    // Return to original area gradually
-                    const returnForce = particle.originalPosition.clone()
-                        .sub(particle.mesh.position)
-                        .multiplyScalar(0.002);
-                    
-                    particle.velocity.add(returnForce);
-                    
-                    // Damping
-                    particle.velocity.multiplyScalar(0.99);
-                    
-                    // Hand interaction for open hand
-                    if (this.handDetected && this.gestures.isOpenHand) {
-                        const handDistance = particle.mesh.position.distanceTo(this.handPosition);
-                        
-                        if (handDistance < 20) {
-                            // Repel particles from hand
-                            const repelForce = particle.mesh.position.clone()
-                                .sub(this.handPosition)
-                                .normalize()
-                                .multiplyScalar(0.5 / (handDistance + 1));
-                            
-                            particle.velocity.add(repelForce);
-                            
-                            // Add hand velocity influence
-                            particle.velocity.add(this.handVelocity.clone().multiplyScalar(0.1));
+                    } 
+                    else if (config.mode === 'manipulate') {
+                        // In manipulate mode, different gestures have different effects
+                        if (simulatedHand.gesture === 'pinch' && distance < 200) {
+                            // Attract particles strongly
+                            const force = 10 / distance;
+                            particle.vx += (dx / distance) * force;
+                            particle.vy += (dy / distance) * force;
+                        } 
+                        else if (simulatedHand.gesture === 'fist' && distance < 200) {
+                            // Repel particles
+                            const force = 8 / distance;
+                            particle.vx -= (dx / distance) * force;
+                            particle.vy -= (dy / distance) * force;
                         }
                     }
-                    
-                    // Energy pulsing
-                    const pulse = Math.sin(this.time * 2 + i * 0.01) * 0.1 + 0.9;
-                    particle.mesh.material.emissiveIntensity = pulse;
-                    particle.mesh.scale.setScalar(pulse);
-                });
-            }
-            
-            updateFormationMode() {
-                if (this.gestures.isClosedFist) {
-                    // Form particles into sphere around hand
-                    const formationRadius = 15;
-                    const formationSpeed = 0.05;
-                    
-                    this.particles.forEach((particle, i) => {
-                        const angle = (i / this.particles.length) * Math.PI * 2;
-                        const phi = Math.acos(1 - 2 * i / this.particles.length);
-                        
-                        const targetPos = new THREE.Vector3(
-                            this.handPosition.x + formationRadius * Math.sin(phi) * Math.cos(angle),
-                            this.handPosition.y + formationRadius * Math.sin(phi) * Math.sin(angle),
-                            this.handPosition.z + formationRadius * Math.cos(phi)
-                        );
-                        
-                        // Move toward target
-                        particle.velocity.add(
-                            targetPos.sub(particle.mesh.position).multiplyScalar(formationSpeed)
-                        );
-                        
-                        // Energy effect
-                        particle.mesh.material.emissiveIntensity = 1.5;
-                        particle.mesh.scale.setScalar(1.2);
-                    });
-                }
-            }
-            
-            updateEnergyMode() {
-                if (this.gestures.isPinching) {
-                    // Create energy burst from pinch
-                    this.energyLevel = Math.min(100, this.energyLevel + 0.5);
-                    
-                    this.particles.forEach(particle => {
-                        const distance = particle.mesh.position.distanceTo(this.handPosition);
-                        
-                        if (distance < 30) {
-                            // Attract to pinch point
-                            const attractForce = this.handPosition.clone()
-                                .sub(particle.mesh.position)
-                                .normalize()
-                                .multiplyScalar(1.0 / (distance + 1));
-                            
-                            particle.velocity.add(attractForce);
-                            
-                            // Energy charging effect
-                            particle.mesh.material.color.lerp(this.ironManColors.energy, 0.1);
-                            particle.mesh.material.emissiveIntensity = 2;
-                            particle.mesh.scale.setScalar(1.5);
-                        }
-                    });
-                } else {
-                    // Gradually return to normal
-                    this.energyLevel = Math.max(0, this.energyLevel - 0.1);
-                    
-                    this.particles.forEach(particle => {
-                        particle.mesh.material.color.lerp(particle.color, 0.05);
-                        particle.mesh.material.emissiveIntensity = 1;
-                        particle.mesh.scale.setScalar(1);
-                    });
-                }
-                
-                this.energyLevelElement.textContent = `${Math.round(this.energyLevel)}%`;
-            }
-            
-            updateInterfaceMode() {
-                if (this.gestures.isTwoFingers) {
-                    // Create HUD-like interface
-                    const hudSize = 20;
-                    
-                    this.particles.forEach((particle, i) => {
-                        const row = Math.floor(i / 50);
-                        const col = i % 50;
-                        
-                        const targetPos = new THREE.Vector3(
-                            this.handPosition.x + (col - 25) * 1.5,
-                            this.handPosition.y + (row - 10) * 1.5,
-                            this.handPosition.z
-                        );
-                        
-                        // Snap to grid
-                        particle.velocity.add(
-                            targetPos.sub(particle.mesh.position).multiplyScalar(0.1)
-                        );
-                        
-                        // HUD glow effect
-                        particle.mesh.material.emissiveIntensity = 1.2;
-                        particle.mesh.material.color.lerp(this.ironManColors.hologram, 0.2);
-                    });
-                }
-            }
-            
-            updateHolographicLines() {
-                // Update connections between nearby particles
-                const positions = [];
-                const maxConnections = 1000;
-                let connectionCount = 0;
-                
-                for (let i = 0; i < this.particles.length && connectionCount < maxConnections; i++) {
-                    for (let j = i + 1; j < this.particles.length && connectionCount < maxConnections; j++) {
-                        const distance = this.particles[i].mesh.position.distanceTo(this.particles[j].mesh.position);
-                        
-                        if (distance < 10) {
-                            // Create line between particles
-                            positions.push(
-                                this.particles[i].mesh.position.x,
-                                this.particles[i].mesh.position.y,
-                                this.particles[i].mesh.position.z
-                            );
-                            positions.push(
-                                this.particles[j].mesh.position.x,
-                                this.particles[j].mesh.position.y,
-                                this.particles[j].mesh.position.z
-                            );
-                            connectionCount++;
+                    else if (config.mode === 'destroy') {
+                        // In destroy mode, particles near hand are removed
+                        if (distance < 100) {
+                            particle.life -= 0.05;
                         }
                     }
                 }
                 
-                // Update line geometry
-                this.lineGeometry.setAttribute('position', 
-                    new THREE.Float32BufferAttribute(positions, 3));
-                this.lineGeometry.attributes.position.needsUpdate = true;
-            }
-            
-            updateEnergyCore() {
-                // Animate central energy core
-                if (this.energyCore) {
-                    this.energyCore.rotation.x += 0.005;
-                    this.energyCore.rotation.y += 0.01;
-                    
-                    // Pulse animation
-                    const pulse = Math.sin(this.time * 2) * 0.5 + 1.5;
-                    this.energyCore.scale.setScalar(pulse);
+                // Bounce off edges
+                if (particle.x < 0 || particle.x > particleCanvas.width) {
+                    particle.vx *= -0.8;
+                    particle.x = Math.max(0, Math.min(particleCanvas.width, particle.x));
                 }
                 
-                if (this.energyPulse) {
-                    this.energyPulse.rotation.x += 0.01;
-                    this.energyPulse.rotation.y += 0.02;
-                    
-                    // Expanding/contracting pulse
-                    const pulseSize = Math.sin(this.time * 3) * 2 + 3;
-                    this.energyPulse.scale.setScalar(pulseSize);
-                    
-                    // Fade in/out
-                    this.energyPulse.material.opacity = Math.sin(this.time) * 0.3 + 0.3;
+                if (particle.y < 0 || particle.y > particleCanvas.height) {
+                    particle.vy *= -0.8;
+                    particle.y = Math.max(0, Math.min(particleCanvas.height, particle.y));
                 }
             }
             
-            updateFPS() {
-                this.frameCount++;
-                const currentTime = performance.now() / 1000;
+            updateParticleCount();
+        }
+        
+        // Draw particles
+        function drawParticles() {
+            // Clear canvas with a slight fade effect
+            particleCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            particleCtx.fillRect(0, 0, particleCanvas.width, particleCanvas.height);
+            
+            for (let particle of particles) {
+                particleCtx.save();
+                particleCtx.translate(particle.x, particle.y);
+                particleCtx.rotate(particle.rotation);
                 
-                if (currentTime - this.lastFpsUpdate >= 1) {
-                    this.fpsElement.textContent = this.frameCount;
-                    this.frameCount = 0;
-                    this.lastFpsUpdate = currentTime;
+                // Set global alpha based on particle life
+                particleCtx.globalAlpha = particle.life;
+                
+                // Draw different particle types
+                switch(particle.type) {
+                    case 'sparkle':
+                        // Draw a sparkle (star shape)
+                        drawSparkle(particleCtx, 0, 0, particle.size, particle.color);
+                        break;
+                        
+                    case 'orb':
+                        // Draw an orb with gradient
+                        drawOrb(particleCtx, 0, 0, particle.size, particle.color);
+                        break;
+                        
+                    case 'star':
+                        // Draw a star
+                        drawStar(particleCtx, 0, 0, particle.size, particle.color);
+                        break;
+                        
+                    case 'fire':
+                        // Draw fire particle
+                        drawFire(particleCtx, 0, 0, particle.size, particle.color);
+                        break;
                 }
+                
+                particleCtx.restore();
             }
             
-            animate() {
-                requestAnimationFrame(() => this.animate());
-                
-                // Update time
-                this.time += this.clock.getDelta();
-                
-                // Update current mode
-                if (this.modes[this.currentMode]) {
-                    this.modes[this.currentMode]();
-                }
-                
-                // Update holographic connections
-                this.updateHolographicLines();
-                
-                // Update energy core
-                this.updateEnergyCore();
-                
-                // Update FPS
-                this.updateFPS();
-                
-                // Render scene
-                this.renderer.render(this.scene, this.camera);
+            // Draw hand position indicator if hand is detected
+            if (simulatedHand.visible && simulatedHand.x && simulatedHand.y) {
+                drawHandIndicator(simulatedHand.x, simulatedHand.y, simulatedHand.gesture);
             }
         }
-
-        // Initialize when page loads
-        window.addEventListener('DOMContentLoaded', () => {
-            new IronManParticleSystem();
+        
+        // Draw a sparkle (star shape)
+        function drawSparkle(ctx, x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
+            
+            // Draw a simple star
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * Math.PI * 2) / 5;
+                const radius = size;
+                
+                if (i === 0) {
+                    ctx.moveTo(
+                        x + Math.cos(angle) * radius,
+                        y + Math.sin(angle) * radius
+                    );
+                } else {
+                    ctx.lineTo(
+                        x + Math.cos(angle) * radius,
+                        y + Math.sin(angle) * radius
+                    );
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        // Draw an orb with gradient
+        function drawOrb(ctx, x, y, size, color) {
+            const gradient = ctx.createRadialGradient(
+                x, y, 0,
+                x, y, size
+            );
+            
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(0.7, color.replace('100%', '80%'));
+            gradient.addColorStop(1, color.replace('100%', '0%').replace(')', ', 0)'));
+            
+            ctx.fillStyle = gradient;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 20;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        // Draw a star
+        function drawStar(ctx, x, y, size, color) {
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+            
+            const spikes = 5;
+            const outerRadius = size;
+            const innerRadius = size * 0.5;
+            
+            ctx.beginPath();
+            for (let i = 0; i < spikes * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI) / spikes;
+                
+                if (i === 0) {
+                    ctx.moveTo(
+                        x + Math.cos(angle) * radius,
+                        y + Math.sin(angle) * radius
+                    );
+                } else {
+                    ctx.lineTo(
+                        x + Math.cos(angle) * radius,
+                        y + Math.sin(angle) * radius
+                    );
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        // Draw fire particle
+        function drawFire(ctx, x, y, size, color) {
+            const gradient = ctx.createRadialGradient(
+                x, y - size * 0.5, 0,
+                x, y, size * 1.5
+            );
+            
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(0.5, color.replace('100%', '80%').replace('hsl', 'hsla').replace(')', ', 0.7)'));
+            gradient.addColorStop(1, color.replace('100%', '0%').replace('hsl', 'hsla').replace(')', ', 0)'));
+            
+            ctx.fillStyle = gradient;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 15;
+            
+            ctx.beginPath();
+            ctx.ellipse(x, y, size, size * 1.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+        }
+        
+        // Draw hand indicator
+        function drawHandIndicator(x, y, gesture) {
+            particleCtx.save();
+            
+            // Draw hand circle
+            particleCtx.fillStyle = 'rgba(77, 255, 234, 0.2)';
+            particleCtx.beginPath();
+            particleCtx.arc(x, y, 50, 0, Math.PI * 2);
+            particleCtx.fill();
+            
+            // Draw gesture indicator
+            particleCtx.fillStyle = '#4dffea';
+            particleCtx.font = '24px Arial';
+            particleCtx.textAlign = 'center';
+            particleCtx.textBaseline = 'middle';
+            
+            let gestureSymbol = '✋';
+            if (gesture === 'pinch') gestureSymbol = '🤏';
+            else if (gesture === 'fist') gestureSymbol = '✊';
+            else if (gesture === 'two') gestureSymbol = '✌️';
+            
+            particleCtx.fillText(gestureSymbol, x, y);
+            
+            particleCtx.restore();
+        }
+        
+        // Simulate hand tracking (since we can't implement real hand tracking without a library)
+        function simulateHandTracking() {
+            if (!isWebcamActive) return;
+            
+            // Simulate hand appearing/disappearing
+            if (Math.random() > 0.95) {
+                simulatedHand.visible = !simulatedHand.visible;
+            }
+            
+            if (simulatedHand.visible) {
+                // Update hand position based on mouse or random movement
+                if (simulatedHand.x === null || simulatedHand.y === null) {
+                    simulatedHand.x = Math.random() * particleCanvas.width;
+                    simulatedHand.y = Math.random() * particleCanvas.height;
+                } else {
+                    // Move hand randomly
+                    simulatedHand.x += (Math.random() - 0.5) * 10;
+                    simulatedHand.y += (Math.random() - 0.5) * 10;
+                    
+                    // Keep hand within bounds
+                    simulatedHand.x = Math.max(50, Math.min(particleCanvas.width - 50, simulatedHand.x));
+                    simulatedHand.y = Math.max(50, Math.min(particleCanvas.height - 50, simulatedHand.y));
+                }
+                
+                // Randomly change gesture
+                if (Math.random() > 0.98) {
+                    const gestures = ['open', 'pinch', 'fist', 'two'];
+                    simulatedHand.gesture = gestures[Math.floor(Math.random() * gestures.length)];
+                }
+                
+                // Create particles based on gesture and mode
+                if (config.mode === 'create') {
+                    if (simulatedHand.gesture === 'open') {
+                        // Create particles from open hand
+                        if (Math.random() > 0.7) {
+                            createParticle(
+                                simulatedHand.x + (Math.random() - 0.5) * 40,
+                                simulatedHand.y + (Math.random() - 0.5) * 40
+                            );
+                        }
+                    } else if (simulatedHand.gesture === 'two') {
+                        // Create trail of particles with two fingers
+                        for (let i = 0; i < 3; i++) {
+                            createParticle(
+                                simulatedHand.x + (Math.random() - 0.5) * 60,
+                                simulatedHand.y + (Math.random() - 0.5) * 60
+                            );
+                        }
+                    }
+                }
+                
+                config.handDetected = true;
+                document.getElementById('handStatus').textContent = `Detected (${simulatedHand.gesture} gesture)`;
+            } else {
+                config.handDetected = false;
+                document.getElementById('handStatus').textContent = 'No hand detected';
+            }
+        }
+        
+        // Update particle count display
+        function updateParticleCount() {
+            document.getElementById('particleCount').textContent = config.particleCount;
+        }
+        
+        // Animation loop
+        function animate() {
+            simulateHandTracking();
+            updateParticles();
+            drawParticles();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Start webcam (simulated for this demo)
+        function startWebcam() {
+            if (isWebcamActive) return;
+            
+            // In a real implementation, we would access the actual webcam
+            // For this demo, we'll simulate it
+            
+            // Show camera feed (with a placeholder)
+            cameraFeed.style.display = 'block';
+            
+            // Simulate webcam access
+            setTimeout(() => {
+                isWebcamActive = true;
+                document.getElementById('handStatus').textContent = 'Webcam active - simulating hand tracking';
+                document.getElementById('startBtn').textContent = 'Webcam Active';
+                
+                // Create initial particles
+                for (let i = 0; i < 50; i++) {
+                    createParticle(
+                        Math.random() * particleCanvas.width,
+                        Math.random() * particleCanvas.height,
+                        config.particleType
+                    );
+                }
+            }, 1000);
+        }
+        
+        // Setup UI controls
+        function setupControls() {
+            // Start webcam button
+            document.getElementById('startBtn').addEventListener('click', startWebcam);
+            
+            // Clear particles button
+            document.getElementById('clearBtn').addEventListener('click', initParticles);
+            
+            // Randomize button
+            document.getElementById('randomBtn').addEventListener('click', function() {
+                // Create random particles
+                for (let i = 0; i < 100; i++) {
+                    createParticle(
+                        Math.random() * particleCanvas.width,
+                        Math.random() * particleCanvas.height,
+                        ['sparkle', 'orb', 'star', 'fire'][Math.floor(Math.random() * 4)]
+                    );
+                }
+            });
+            
+            // Mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Update mode
+                    config.mode = this.getAttribute('data-mode');
+                    document.getElementById('currentMode').textContent = 
+                        this.textContent;
+                });
+            });
+            
+            // Particle type selection
+            document.querySelectorAll('.particle-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.particle-option').forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Update particle type
+                    config.particleType = this.getAttribute('data-type');
+                });
+            });
+            
+            // Mouse interaction for manual control
+            particleCanvas.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Update simulated hand position based on mouse
+                simulatedHand.x = x;
+                simulatedHand.y = y;
+                simulatedHand.visible = true;
+                
+                // Create particles if in create mode and mouse is down
+                if (e.buttons === 1 && config.mode === 'create') {
+                    for (let i = 0; i < 3; i++) {
+                        createParticle(
+                            x + (Math.random() - 0.5) * 30,
+                            y + (Math.random() - 0.5) * 30
+                        );
+                    }
+                }
+            });
+            
+            particleCanvas.addEventListener('mouseleave', function() {
+                simulatedHand.visible = false;
+            });
+            
+            // Touch support for mobile
+            particleCanvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                const rect = this.getBoundingClientRect();
+                const touch = e.touches[0];
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                // Update simulated hand position based on touch
+                simulatedHand.x = x;
+                simulatedHand.y = y;
+                simulatedHand.visible = true;
+                
+                // Create particles in create mode
+                if (config.mode === 'create') {
+                    for (let i = 0; i < 5; i++) {
+                        createParticle(
+                            x + (Math.random() - 0.5) * 40,
+                            y + (Math.random() - 0.5) * 40
+                        );
+                    }
+                }
+            });
+        }
+        
+        // Initialize everything
+        window.addEventListener('load', function() {
+            resizeCanvas();
+            initParticles();
+            setupControls();
+            animate();
+            
+            // Initialize hand status
+            document.getElementById('handStatus').textContent = 'Click "Start Webcam" to begin';
+        });
+        
+        window.addEventListener('resize', function() {
+            resizeCanvas();
         });
     </script>
 </body>
