@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mountain Night Romance</title>
+    
+    <!-- Step 1: Adcash Library Script - Place in head as high as possible -->
+    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         * {
             margin: 0;
@@ -526,11 +531,11 @@
         });
     </script>
     
-    <!-- AutoTag Script - Added before closing body tag as requested -->
+    <!-- Step 2: AutoTag Script - Place after the library script -->
     <script type="text/javascript">
         aclib.runAutoTag({
             zoneId: 'gaq1q8qnkg',
         });
     </script>
 </body>
-    </html>
+            </html>
