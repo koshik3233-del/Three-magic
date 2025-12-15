@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand-Controlled Particle Creation</title>
+    <title>Mountain Night Romance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,931 +14,515 @@
         }
         
         body {
-            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
-            color: #e0e0ff;
-            min-height: 100vh;
+            background-color: #0a0e17;
+            color: #f0f8ff;
+            line-height: 1.6;
             overflow-x: hidden;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 0 20px;
         }
         
         header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.9), transparent);
+            padding: 30px 0;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            transition: all 0.3s ease;
         }
         
-        h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #4dffea, #ff4de3);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 2px 10px rgba(77, 255, 234, 0.2);
+        header.scrolled {
+            background-color: rgba(10, 14, 23, 0.95);
+            padding: 15px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
         
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.8;
-            margin-bottom: 20px;
-        }
-        
-        .content {
+        nav {
             display: flex;
-            flex-wrap: wrap;
-            gap: 30px;
-            margin-bottom: 30px;
+            justify-content: space-between;
+            align-items: center;
         }
         
-        .canvas-container {
-            flex: 2;
-            min-width: 600px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            color: #6a5acd;
+            margin-right: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            color: #f0f8ff;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: #9d8aff;
+        }
+        
+        .hero {
+            height: 100vh;
             position: relative;
-            background: #000;
-            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
         
-        #particleCanvas {
-            display: block;
-            background: #000;
-        }
-        
-        #webcamCanvas {
+        .hero-bg {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0.3;
-            z-index: 1;
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
+            z-index: -2;
         }
         
-        .info-panel {
-            flex: 1;
-            min-width: 300px;
-            background: rgba(20, 20, 50, 0.7);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        h2 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #4dffea;
-            border-bottom: 2px solid rgba(77, 255, 234, 0.3);
-            padding-bottom: 10px;
-        }
-        
-        .instructions {
-            background: rgba(30, 30, 70, 0.5);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-        
-        .instructions h3 {
-            color: #ff4de3;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-        
-        .instructions ul {
-            padding-left: 20px;
-            line-height: 1.6;
-        }
-        
-        .instructions li {
-            margin-bottom: 10px;
-        }
-        
-        .hand-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(30, 30, 70, 0.5);
-            border-radius: 8px;
-        }
-        
-        .hand-info p {
-            margin-bottom: 10px;
-            font-size: 1rem;
-        }
-        
-        #handStatus {
-            font-weight: bold;
-            color: #4dffea;
-        }
-        
-        #particleCount {
-            font-weight: bold;
-            color: #ff4de3;
-        }
-        
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 25px;
-        }
-        
-        button {
-            background: linear-gradient(90deg, #4dffea, #ff4de3);
-            color: #0a0a1a;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1;
-            min-width: 150px;
-            box-shadow: 0 5px 15px rgba(77, 255, 234, 0.3);
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(77, 255, 234, 0.5);
-        }
-        
-        .mode-selector {
-            margin-top: 25px;
-        }
-        
-        .mode-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .mode-btn {
-            background: rgba(30, 30, 70, 0.8);
-            color: #e0e0ff;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            flex: 1;
-            text-align: center;
-        }
-        
-        .mode-btn.active {
-            background: linear-gradient(90deg, #4dffea, #ff4de3);
-            color: #0a0a1a;
-            border-color: #4dffea;
-        }
-        
-        .mode-btn:hover:not(.active) {
-            border-color: #4dffea;
-        }
-        
-        .particle-types {
-            margin-top: 25px;
-        }
-        
-        .particle-options {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .particle-option {
-            background: rgba(30, 30, 70, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .particle-option:hover {
-            border-color: #4dffea;
-            transform: scale(1.05);
-        }
-        
-        .particle-option.selected {
-            border-color: #ff4de3;
-            background: rgba(255, 77, 227, 0.1);
-        }
-        
-        .particle-icon {
-            font-size: 2rem;
-            margin-bottom: 5px;
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
-            opacity: 0.7;
-        }
-        
-        .camera-feed {
+        .hero-overlay {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 200px;
-            height: 150px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid #4dffea;
-            z-index: 2;
-            background: #000;
-            display: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.4), rgba(10, 14, 23, 0.8));
+            z-index: -1;
         }
         
-        #cameraVideo {
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        .hero h1 {
+            font-size: 4.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero p {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(to right, #6a5acd, #9d8aff);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(106, 90, 205, 0.4);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(106, 90, 205, 0.6);
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #6a5acd, #9d8aff);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .gallery {
+            padding: 100px 0;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .image-card {
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            height: 300px;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(106, 90, 205, 0.3);
+        }
+        
+        .image-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.5s ease;
         }
         
-        .warning {
-            color: #ff4d4d;
-            background: rgba(255, 77, 77, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 20px;
+        .image-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(10, 14, 23, 0.9), transparent);
+            padding: 20px;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .image-card:hover .image-overlay {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .image-overlay h3 {
+            font-size: 1.4rem;
+            margin-bottom: 5px;
+        }
+        
+        .couple-section {
+            padding: 100px 0;
+            background-color: #0f1525;
+        }
+        
+        .couple-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+        
+        .couple-image {
+            flex: 1;
+            min-width: 300px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        .couple-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .couple-content {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .couple-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .couple-content p {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        
+        .stars {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        
+        .quote {
+            font-style: italic;
+            font-size: 1.3rem;
+            padding-left: 20px;
+            border-left: 4px solid #6a5acd;
+            margin: 30px 0;
+        }
+        
+        footer {
+            background-color: #070b15;
+            padding: 60px 0 30px;
             text-align: center;
         }
         
-        @media (max-width: 1000px) {
-            .content {
-                flex-direction: column;
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links li {
+            margin: 0 15px;
+        }
+        
+        .footer-links a {
+            color: #b0b8d0;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #9d8aff;
+        }
+        
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background-color: #1a1f2e;
+            color: #fff;
+            border-radius: 50%;
+            margin: 0 10px;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            background-color: #6a5acd;
+            transform: translateY(-5px);
+        }
+        
+        .copyright {
+            color: #7a82a0;
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
             }
             
-            .canvas-container {
-                min-width: 100%;
+            .hero h1 {
+                font-size: 3rem;
             }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2.2rem;
+            }
+        }
+        
+        .image-credits {
+            text-align: center;
+            margin-top: 30px;
+            color: #7a82a0;
+            font-size: 0.9rem;
+        }
+        
+        .image-credits a {
+            color: #9d8aff;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Hand-Controlled Particle Creation</h1>
-            <p class="subtitle">Use your hands to create and manipulate particles in real-time</p>
-        </header>
-        
-        <div class="content">
-            <div class="canvas-container">
-                <canvas id="particleCanvas"></canvas>
-                <canvas id="webcamCanvas"></canvas>
-                <div class="camera-feed">
-                    <video id="cameraVideo" autoplay muted playsinline></video>
+    <!-- Header & Navigation -->
+    <header id="header">
+        <div class="container">
+            <nav>
+                <a href="#" class="logo"><i class="fas fa-mountain"></i> Mountain Romance</a>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#couple">Our Story</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Mountain Night Romance</h1>
+            <p>Experience the breathtaking beauty of mountain nights and the magic of love under the starlit sky. Where nature's grandeur meets heartfelt moments.</p>
+            <a href="#gallery" class="cta-button">Explore the Beauty</a>
+        </div>
+    </section>
+    
+    <!-- Gallery Section -->
+    <section class="gallery" id="gallery">
+        <div class="container">
+            <h2 class="section-title">Stunning Mountain Nights</h2>
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Mountain night with stars">
+                    <div class="image-overlay">
+                        <h3>Starlit Peaks</h3>
+                        <p>A serene night with stars above the mountain range</p>
+                    </div>
+                </div>
+                <div class="image-card">
+                    <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Northern lights over mountains">
+                    <div class="image-overlay">
+                        <h3>Aurora Majesty</h3>
+                        <p>Northern lights dancing over snow-capped mountains</p>
+                    </div>
+                </div>
+                <div class="image-card">
+                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Mountain lake reflection">
+                    <div class="image-overlay">
+                        <h3>Mirror Lake</h3>
+                        <p>Perfect mountain reflection in a tranquil lake at night</p>
+                    </div>
                 </div>
             </div>
             
-            <div class="info-panel">
-                <h2>Hand Gesture Controls</h2>
-                
-                <div class="instructions">
-                    <h3>How to Create with Your Hands</h3>
-                    <ul>
-                        <li><strong>Open Hand</strong>: Creates particles from your palm</li>
-                        <li><strong>Pinch (Thumb & Index)</strong>: Attracts particles to your fingers</li>
-                        <li><strong>Fist</strong>: Repels particles away from your hand</li>
-                        <li><strong>Two Fingers</strong>: Creates a trail of particles</li>
-                        <li><strong>Move Hands</strong>: Particles follow your hand movements</li>
-                    </ul>
+            <div class="image-credits">
+                <p>Images from <a href="https://unsplash.com" target="_blank">Unsplash</a>. Replace with your own images by updating the src attributes in the img tags.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Couple Section -->
+    <section class="couple-section" id="couple">
+        <div class="container">
+            <h2 class="section-title">Love in the Mountains</h2>
+            <div class="couple-container">
+                <div class="couple-image">
+                    <img src="https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80" alt="Couple watching sunset on mountains">
                 </div>
-                
-                <div class="hand-info">
-                    <p>Hand Status: <span id="handStatus">Waiting for webcam access...</span></p>
-                    <p>Particles Created: <span id="particleCount">0</span></p>
-                    <p>Current Mode: <span id="currentMode">Particle Creation</span></p>
-                </div>
-                
-                <div class="mode-selector">
-                    <h2>Creation Mode</h2>
-                    <div class="mode-buttons">
-                        <div class="mode-btn active" data-mode="create">Create Particles</div>
-                        <div class="mode-btn" data-mode="manipulate">Manipulate Particles</div>
-                        <div class="mode-btn" data-mode="destroy">Clear Particles</div>
+                <div class="couple-content">
+                    <h2>Our Mountain Adventure</h2>
+                    <div class="stars">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
                     </div>
-                </div>
-                
-                <div class="particle-types">
-                    <h2>Particle Types</h2>
-                    <div class="particle-options">
-                        <div class="particle-option selected" data-type="sparkle">
-                            <div class="particle-icon">✨</div>
-                            <div>Sparkles</div>
-                        </div>
-                        <div class="particle-option" data-type="orb">
-                            <div class="particle-icon">🔵</div>
-                            <div>Energy Orbs</div>
-                        </div>
-                        <div class="particle-option" data-type="star">
-                            <div class="particle-icon">⭐</div>
-                            <div>Stars</div>
-                        </div>
-                        <div class="particle-option" data-type="fire">
-                            <div class="particle-icon">🔥</div>
-                            <div>Fire Particles</div>
-                        </div>
+                    <p>There's something magical about sharing a mountain vista with someone you love. The crisp night air, the endless stars, and the profound silence create moments that last a lifetime.</p>
+                    <p>Whether it's watching the sunset from a peak or cozying up by a campfire under the Milky Way, mountains have a way of bringing people closer together.</p>
+                    <div class="quote">
+                        "In every walk with nature, one receives far more than he seeks. And when shared with a loved one, the mountains gift us with memories that warm our souls forever."
                     </div>
-                </div>
-                
-                <div class="controls">
-                    <button id="startBtn">Start Webcam</button>
-                    <button id="clearBtn">Clear All</button>
-                    <button id="randomBtn">Randomize</button>
-                </div>
-                
-                <div class="warning">
-                    <p>Allow webcam access when prompted. Works best in a well-lit room.</p>
+                    <a href="#gallery" class="cta-button">View More Moments</a>
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p>Hand-Controlled Particle System | Uses simulated hand tracking for demonstration</p>
-            <p>Move your hands in front of your webcam to create and manipulate particles</p>
-        </footer>
-    </div>
-
+    </section>
+    
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <a href="#" class="logo"><i class="fas fa-mountain"></i> Mountain Romance</a>
+            <p>Celebrating love and nature's beauty in majestic mountain settings.</p>
+            
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook-f"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-pinterest-p"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+            </div>
+            
+            <ul class="footer-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#couple">Our Story</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#">Privacy Policy</a></li>
+            </ul>
+            
+            <p class="copyright">© 2023 Mountain Night Romance. All rights reserved. | Designed with <i class="fas fa-heart" style="color:#ff4757;"></i> for nature lovers</p>
+        </div>
+    </footer>
+    
     <script>
-        // Canvas setup
-        const particleCanvas = document.getElementById('particleCanvas');
-        const particleCtx = particleCanvas.getContext('2d');
-        const webcamCanvas = document.getElementById('webcamCanvas');
-        const webcamCtx = webcamCanvas.getContext('2d');
-        const cameraVideo = document.getElementById('cameraVideo');
-        const cameraFeed = document.querySelector('.camera-feed');
-        
-        // Set canvas size to match container
-        function resizeCanvas() {
-            const container = particleCanvas.parentElement;
-            particleCanvas.width = container.clientWidth;
-            particleCanvas.height = container.clientHeight;
-            webcamCanvas.width = container.clientWidth;
-            webcamCanvas.height = container.clientHeight;
-        }
-        
-        // Particle system variables
-        let particles = [];
-        let handPositions = [];
-        let isWebcamActive = false;
-        let animationId = null;
-        let lastHandUpdate = 0;
-        
-        // Configuration
-        let config = {
-            mode: 'create',
-            particleType: 'sparkle',
-            particleCount: 0,
-            handDetected: false,
-            showCameraFeed: false
-        };
-        
-        // Simulated hand data (since we can't implement real hand tracking without a library)
-        let simulatedHand = {
-            x: null,
-            y: null,
-            gesture: 'open',
-            visible: false
-        };
-        
-        // Initialize the particle system
-        function initParticles() {
-            particles = [];
-            config.particleCount = 0;
-            updateParticleCount();
-        }
-        
-        // Create a new particle
-        function createParticle(x, y, type = config.particleType) {
-            let particle = {
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 4,
-                vy: (Math.random() - 0.5) * 4,
-                size: 5 + Math.random() * 10,
-                color: '',
-                life: 1,
-                maxLife: 1,
-                type: type,
-                rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() - 0.5) * 0.1
-            };
-            
-            // Set color based on particle type
-            switch(type) {
-                case 'sparkle':
-                    particle.color = `hsl(${Math.random() * 60 + 50}, 100%, 70%)`;
-                    particle.size = 3 + Math.random() * 5;
-                    break;
-                case 'orb':
-                    particle.color = `hsl(${Math.random() * 60 + 180}, 100%, 60%)`;
-                    particle.size = 8 + Math.random() * 12;
-                    break;
-                case 'star':
-                    particle.color = `hsl(${Math.random() * 60 + 300}, 100%, 70%)`;
-                    particle.size = 6 + Math.random() * 8;
-                    break;
-                case 'fire':
-                    particle.color = `hsl(${Math.random() * 30 + 10}, 100%, 60%)`;
-                    particle.size = 4 + Math.random() * 6;
-                    break;
-            }
-            
-            particles.push(particle);
-            config.particleCount++;
-            updateParticleCount();
-        }
-        
-        // Update particle positions
-        function updateParticles() {
-            for (let i = particles.length - 1; i >= 0; i--) {
-                let particle = particles[i];
-                
-                // Apply gravity
-                particle.vy += 0.05;
-                
-                // Apply air resistance
-                particle.vx *= 0.99;
-                particle.vy *= 0.99;
-                
-                // Update position
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                
-                // Update rotation
-                particle.rotation += particle.rotationSpeed;
-                
-                // Decrease life
-                particle.life -= 0.005;
-                
-                // Remove dead particles
-                if (particle.life <= 0) {
-                    particles.splice(i, 1);
-                    config.particleCount--;
-                    continue;
-                }
-                
-                // Handle hand interactions if hand is detected
-                if (simulatedHand.visible && simulatedHand.x && simulatedHand.y) {
-                    const dx = simulatedHand.x - particle.x;
-                    const dy = simulatedHand.y - particle.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    // Different interactions based on mode and gesture
-                    if (config.mode === 'create') {
-                        // In create mode, hands can attract particles
-                        if (distance < 150) {
-                            const force = 5 / distance;
-                            particle.vx += (dx / distance) * force;
-                            particle.vy += (dy / distance) * force;
-                        }
-                    } 
-                    else if (config.mode === 'manipulate') {
-                        // In manipulate mode, different gestures have different effects
-                        if (simulatedHand.gesture === 'pinch' && distance < 200) {
-                            // Attract particles strongly
-                            const force = 10 / distance;
-                            particle.vx += (dx / distance) * force;
-                            particle.vy += (dy / distance) * force;
-                        } 
-                        else if (simulatedHand.gesture === 'fist' && distance < 200) {
-                            // Repel particles
-                            const force = 8 / distance;
-                            particle.vx -= (dx / distance) * force;
-                            particle.vy -= (dy / distance) * force;
-                        }
-                    }
-                    else if (config.mode === 'destroy') {
-                        // In destroy mode, particles near hand are removed
-                        if (distance < 100) {
-                            particle.life -= 0.05;
-                        }
-                    }
-                }
-                
-                // Bounce off edges
-                if (particle.x < 0 || particle.x > particleCanvas.width) {
-                    particle.vx *= -0.8;
-                    particle.x = Math.max(0, Math.min(particleCanvas.width, particle.x));
-                }
-                
-                if (particle.y < 0 || particle.y > particleCanvas.height) {
-                    particle.vy *= -0.8;
-                    particle.y = Math.max(0, Math.min(particleCanvas.height, particle.y));
-                }
-            }
-            
-            updateParticleCount();
-        }
-        
-        // Draw particles
-        function drawParticles() {
-            // Clear canvas with a slight fade effect
-            particleCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-            particleCtx.fillRect(0, 0, particleCanvas.width, particleCanvas.height);
-            
-            for (let particle of particles) {
-                particleCtx.save();
-                particleCtx.translate(particle.x, particle.y);
-                particleCtx.rotate(particle.rotation);
-                
-                // Set global alpha based on particle life
-                particleCtx.globalAlpha = particle.life;
-                
-                // Draw different particle types
-                switch(particle.type) {
-                    case 'sparkle':
-                        // Draw a sparkle (star shape)
-                        drawSparkle(particleCtx, 0, 0, particle.size, particle.color);
-                        break;
-                        
-                    case 'orb':
-                        // Draw an orb with gradient
-                        drawOrb(particleCtx, 0, 0, particle.size, particle.color);
-                        break;
-                        
-                    case 'star':
-                        // Draw a star
-                        drawStar(particleCtx, 0, 0, particle.size, particle.color);
-                        break;
-                        
-                    case 'fire':
-                        // Draw fire particle
-                        drawFire(particleCtx, 0, 0, particle.size, particle.color);
-                        break;
-                }
-                
-                particleCtx.restore();
-            }
-            
-            // Draw hand position indicator if hand is detected
-            if (simulatedHand.visible && simulatedHand.x && simulatedHand.y) {
-                drawHandIndicator(simulatedHand.x, simulatedHand.y, simulatedHand.gesture);
-            }
-        }
-        
-        // Draw a sparkle (star shape)
-        function drawSparkle(ctx, x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 15;
-            
-            // Draw a simple star
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                const angle = (i * Math.PI * 2) / 5;
-                const radius = size;
-                
-                if (i === 0) {
-                    ctx.moveTo(
-                        x + Math.cos(angle) * radius,
-                        y + Math.sin(angle) * radius
-                    );
-                } else {
-                    ctx.lineTo(
-                        x + Math.cos(angle) * radius,
-                        y + Math.sin(angle) * radius
-                    );
-                }
-            }
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.shadowBlur = 0;
-        }
-        
-        // Draw an orb with gradient
-        function drawOrb(ctx, x, y, size, color) {
-            const gradient = ctx.createRadialGradient(
-                x, y, 0,
-                x, y, size
-            );
-            
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(0.7, color.replace('100%', '80%'));
-            gradient.addColorStop(1, color.replace('100%', '0%').replace(')', ', 0)'));
-            
-            ctx.fillStyle = gradient;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 20;
-            
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.shadowBlur = 0;
-        }
-        
-        // Draw a star
-        function drawStar(ctx, x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 10;
-            
-            const spikes = 5;
-            const outerRadius = size;
-            const innerRadius = size * 0.5;
-            
-            ctx.beginPath();
-            for (let i = 0; i < spikes * 2; i++) {
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
-                const angle = (i * Math.PI) / spikes;
-                
-                if (i === 0) {
-                    ctx.moveTo(
-                        x + Math.cos(angle) * radius,
-                        y + Math.sin(angle) * radius
-                    );
-                } else {
-                    ctx.lineTo(
-                        x + Math.cos(angle) * radius,
-                        y + Math.sin(angle) * radius
-                    );
-                }
-            }
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.shadowBlur = 0;
-        }
-        
-        // Draw fire particle
-        function drawFire(ctx, x, y, size, color) {
-            const gradient = ctx.createRadialGradient(
-                x, y - size * 0.5, 0,
-                x, y, size * 1.5
-            );
-            
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(0.5, color.replace('100%', '80%').replace('hsl', 'hsla').replace(')', ', 0.7)'));
-            gradient.addColorStop(1, color.replace('100%', '0%').replace('hsl', 'hsla').replace(')', ', 0)'));
-            
-            ctx.fillStyle = gradient;
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 15;
-            
-            ctx.beginPath();
-            ctx.ellipse(x, y, size, size * 1.5, 0, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.shadowBlur = 0;
-        }
-        
-        // Draw hand indicator
-        function drawHandIndicator(x, y, gesture) {
-            particleCtx.save();
-            
-            // Draw hand circle
-            particleCtx.fillStyle = 'rgba(77, 255, 234, 0.2)';
-            particleCtx.beginPath();
-            particleCtx.arc(x, y, 50, 0, Math.PI * 2);
-            particleCtx.fill();
-            
-            // Draw gesture indicator
-            particleCtx.fillStyle = '#4dffea';
-            particleCtx.font = '24px Arial';
-            particleCtx.textAlign = 'center';
-            particleCtx.textBaseline = 'middle';
-            
-            let gestureSymbol = '✋';
-            if (gesture === 'pinch') gestureSymbol = '🤏';
-            else if (gesture === 'fist') gestureSymbol = '✊';
-            else if (gesture === 'two') gestureSymbol = '✌️';
-            
-            particleCtx.fillText(gestureSymbol, x, y);
-            
-            particleCtx.restore();
-        }
-        
-        // Simulate hand tracking (since we can't implement real hand tracking without a library)
-        function simulateHandTracking() {
-            if (!isWebcamActive) return;
-            
-            // Simulate hand appearing/disappearing
-            if (Math.random() > 0.95) {
-                simulatedHand.visible = !simulatedHand.visible;
-            }
-            
-            if (simulatedHand.visible) {
-                // Update hand position based on mouse or random movement
-                if (simulatedHand.x === null || simulatedHand.y === null) {
-                    simulatedHand.x = Math.random() * particleCanvas.width;
-                    simulatedHand.y = Math.random() * particleCanvas.height;
-                } else {
-                    // Move hand randomly
-                    simulatedHand.x += (Math.random() - 0.5) * 10;
-                    simulatedHand.y += (Math.random() - 0.5) * 10;
-                    
-                    // Keep hand within bounds
-                    simulatedHand.x = Math.max(50, Math.min(particleCanvas.width - 50, simulatedHand.x));
-                    simulatedHand.y = Math.max(50, Math.min(particleCanvas.height - 50, simulatedHand.y));
-                }
-                
-                // Randomly change gesture
-                if (Math.random() > 0.98) {
-                    const gestures = ['open', 'pinch', 'fist', 'two'];
-                    simulatedHand.gesture = gestures[Math.floor(Math.random() * gestures.length)];
-                }
-                
-                // Create particles based on gesture and mode
-                if (config.mode === 'create') {
-                    if (simulatedHand.gesture === 'open') {
-                        // Create particles from open hand
-                        if (Math.random() > 0.7) {
-                            createParticle(
-                                simulatedHand.x + (Math.random() - 0.5) * 40,
-                                simulatedHand.y + (Math.random() - 0.5) * 40
-                            );
-                        }
-                    } else if (simulatedHand.gesture === 'two') {
-                        // Create trail of particles with two fingers
-                        for (let i = 0; i < 3; i++) {
-                            createParticle(
-                                simulatedHand.x + (Math.random() - 0.5) * 60,
-                                simulatedHand.y + (Math.random() - 0.5) * 60
-                            );
-                        }
-                    }
-                }
-                
-                config.handDetected = true;
-                document.getElementById('handStatus').textContent = `Detected (${simulatedHand.gesture} gesture)`;
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
             } else {
-                config.handDetected = false;
-                document.getElementById('handStatus').textContent = 'No hand detected';
+                header.classList.remove('scrolled');
             }
-        }
-        
-        // Update particle count display
-        function updateParticleCount() {
-            document.getElementById('particleCount').textContent = config.particleCount;
-        }
-        
-        // Animation loop
-        function animate() {
-            simulateHandTracking();
-            updateParticles();
-            drawParticles();
-            animationId = requestAnimationFrame(animate);
-        }
-        
-        // Start webcam (simulated for this demo)
-        function startWebcam() {
-            if (isWebcamActive) return;
-            
-            // In a real implementation, we would access the actual webcam
-            // For this demo, we'll simulate it
-            
-            // Show camera feed (with a placeholder)
-            cameraFeed.style.display = 'block';
-            
-            // Simulate webcam access
-            setTimeout(() => {
-                isWebcamActive = true;
-                document.getElementById('handStatus').textContent = 'Webcam active - simulating hand tracking';
-                document.getElementById('startBtn').textContent = 'Webcam Active';
-                
-                // Create initial particles
-                for (let i = 0; i < 50; i++) {
-                    createParticle(
-                        Math.random() * particleCanvas.width,
-                        Math.random() * particleCanvas.height,
-                        config.particleType
-                    );
-                }
-            }, 1000);
-        }
-        
-        // Setup UI controls
-        function setupControls() {
-            // Start webcam button
-            document.getElementById('startBtn').addEventListener('click', startWebcam);
-            
-            // Clear particles button
-            document.getElementById('clearBtn').addEventListener('click', initParticles);
-            
-            // Randomize button
-            document.getElementById('randomBtn').addEventListener('click', function() {
-                // Create random particles
-                for (let i = 0; i < 100; i++) {
-                    createParticle(
-                        Math.random() * particleCanvas.width,
-                        Math.random() * particleCanvas.height,
-                        ['sparkle', 'orb', 'star', 'fire'][Math.floor(Math.random() * 4)]
-                    );
-                }
-            });
-            
-            // Mode buttons
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Update mode
-                    config.mode = this.getAttribute('data-mode');
-                    document.getElementById('currentMode').textContent = 
-                        this.textContent;
-                });
-            });
-            
-            // Particle type selection
-            document.querySelectorAll('.particle-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    document.querySelectorAll('.particle-option').forEach(opt => opt.classList.remove('selected'));
-                    
-                    // Add selected class to clicked option
-                    this.classList.add('selected');
-                    
-                    // Update particle type
-                    config.particleType = this.getAttribute('data-type');
-                });
-            });
-            
-            // Mouse interaction for manual control
-            particleCanvas.addEventListener('mousemove', function(e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                // Update simulated hand position based on mouse
-                simulatedHand.x = x;
-                simulatedHand.y = y;
-                simulatedHand.visible = true;
-                
-                // Create particles if in create mode and mouse is down
-                if (e.buttons === 1 && config.mode === 'create') {
-                    for (let i = 0; i < 3; i++) {
-                        createParticle(
-                            x + (Math.random() - 0.5) * 30,
-                            y + (Math.random() - 0.5) * 30
-                        );
-                    }
-                }
-            });
-            
-            particleCanvas.addEventListener('mouseleave', function() {
-                simulatedHand.visible = false;
-            });
-            
-            // Touch support for mobile
-            particleCanvas.addEventListener('touchmove', function(e) {
-                e.preventDefault();
-                const rect = this.getBoundingClientRect();
-                const touch = e.touches[0];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                
-                // Update simulated hand position based on touch
-                simulatedHand.x = x;
-                simulatedHand.y = y;
-                simulatedHand.visible = true;
-                
-                // Create particles in create mode
-                if (config.mode === 'create') {
-                    for (let i = 0; i < 5; i++) {
-                        createParticle(
-                            x + (Math.random() - 0.5) * 40,
-                            y + (Math.random() - 0.5) * 40
-                        );
-                    }
-                }
-            });
-        }
-        
-        // Initialize everything
-        window.addEventListener('load', function() {
-            resizeCanvas();
-            initParticles();
-            setupControls();
-            animate();
-            
-            // Initialize hand status
-            document.getElementById('handStatus').textContent = 'Click "Start Webcam" to begin';
         });
         
-        window.addEventListener('resize', function() {
-            resizeCanvas();
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Image hover effect enhancement
+        const imageCards = document.querySelectorAll('.image-card');
+        imageCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.zIndex = '10';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.zIndex = '1';
+            });
         });
     </script>
 </body>
-    </html>
+                                                                        </html>
