@@ -3,539 +3,708 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mountain Night Romance</title>
-    
-    <!-- Step 1: Adcash Library Script - Place in head as high as possible -->
-    <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>Hand Gesture Controlled Particles</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            background-color: #0a0e17;
-            color: #f0f8ff;
-            line-height: 1.6;
-            overflow-x: hidden;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        header {
-            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.9), transparent);
-            padding: 30px 0;
-            position: fixed;
-            width: 100%;
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-        
-        header.scrolled {
-            background-color: rgba(10, 14, 23, 0.95);
-            padding: 15px 0;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo i {
-            color: #6a5acd;
-            margin-right: 10px;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-        
-        .nav-links li {
-            margin-left: 30px;
-        }
-        
-        .nav-links a {
-            color: #f0f8ff;
-            text-decoration: none;
-            font-size: 18px;
-            transition: color 0.3s ease;
-        }
-        
-        .nav-links a:hover {
-            color: #9d8aff;
-        }
-        
-        .hero {
-            height: 100vh;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            width: 100%;
+            height: 100%;
         }
         
-        .hero-bg {
+        #video {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') center/cover no-repeat;
-            z-index: -2;
-        }
-        
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(10, 14, 23, 0.4), rgba(10, 14, 23, 0.8));
-            z-index: -1;
-        }
-        
-        .hero-content {
-            text-align: center;
-            max-width: 800px;
-            padding: 20px;
-        }
-        
-        .hero h1 {
-            font-size: 4.5rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .hero p {
-            font-size: 1.4rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(to right, #6a5acd, #9d8aff);
-            color: white;
-            padding: 15px 40px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(106, 90, 205, 0.4);
-        }
-        
-        .cta-button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(106, 90, 205, 0.6);
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 2.8rem;
-            margin-bottom: 50px;
-            position: relative;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            width: 100px;
-            height: 4px;
-            background: linear-gradient(to right, #6a5acd, #9d8aff);
-            bottom: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 2px;
-        }
-        
-        .gallery {
-            padding: 100px 0;
-        }
-        
-        .image-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-        
-        .image-card {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            transition: all 0.4s ease;
-            position: relative;
-            height: 300px;
-        }
-        
-        .image-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 35px rgba(106, 90, 205, 0.3);
-        }
-        
-        .image-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.5s ease;
+            transform: scaleX(-1); /* Mirror the video */
+            display: none;
         }
         
-        .image-card:hover img {
-            transform: scale(1.05);
-        }
-        
-        .image-overlay {
+        #canvas {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            background: linear-gradient(to top, rgba(10, 14, 23, 0.9), transparent);
-            padding: 20px;
-            transform: translateY(10px);
-            opacity: 0;
-            transition: all 0.3s ease;
+            height: 100%;
+            z-index: 1;
         }
         
-        .image-card:hover .image-overlay {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        
-        .image-overlay h3 {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
-        }
-        
-        .couple-section {
-            padding: 100px 0;
-            background-color: #0f1525;
-        }
-        
-        .couple-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 40px;
-        }
-        
-        .couple-image {
-            flex: 1;
-            min-width: 300px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
-        }
-        
-        .couple-image img {
+        #outputCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: auto;
-            display: block;
+            height: 100%;
+            z-index: 2;
         }
         
-        .couple-content {
-            flex: 1;
-            min-width: 300px;
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
         }
         
-        .couple-content h2 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #00ff88;
         }
         
-        .couple-content p {
-            font-size: 1.2rem;
-            margin-bottom: 25px;
-            opacity: 0.9;
-        }
-        
-        .stars {
-            color: #ffd700;
+        .status {
             margin-bottom: 15px;
+            font-size: 0.9rem;
         }
         
-        .quote {
-            font-style: italic;
-            font-size: 1.3rem;
-            padding-left: 20px;
-            border-left: 4px solid #6a5acd;
-            margin: 30px 0;
+        .gesture-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 5px;
+            border-left: 3px solid #00ff88;
         }
         
-        footer {
-            background-color: #070b15;
-            padding: 60px 0 30px;
+        .gesture-list {
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+        
+        .gesture-list li {
+            margin-bottom: 5px;
+            padding-left: 10px;
+        }
+        
+        button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+        
+        .particle-count {
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
             text-align: center;
-        }
-        
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            list-style: none;
-            margin: 30px 0;
-            flex-wrap: wrap;
-        }
-        
-        .footer-links li {
-            margin: 0 15px;
-        }
-        
-        .footer-links a {
-            color: #b0b8d0;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-links a:hover {
-            color: #9d8aff;
-        }
-        
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            margin: 30px 0;
-        }
-        
-        .social-icons a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            background-color: #1a1f2e;
-            color: #fff;
-            border-radius: 50%;
-            margin: 0 10px;
             font-size: 1.2rem;
-            transition: all 0.3s ease;
+            color: #00ff88;
         }
         
-        .social-icons a:hover {
-            background-color: #6a5acd;
-            transform: translateY(-5px);
-        }
-        
-        .copyright {
-            color: #7a82a0;
-            margin-top: 30px;
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .hero h1 {
-                font-size: 3rem;
-            }
-            
-            .hero p {
-                font-size: 1.1rem;
-            }
-            
-            .section-title {
-                font-size: 2.2rem;
-            }
-        }
-        
-        .image-credits {
-            text-align: center;
-            margin-top: 30px;
-            color: #7a82a0;
-            font-size: 0.9rem;
-        }
-        
-        .image-credits a {
-            color: #9d8aff;
-            text-decoration: none;
+        .debug {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            max-width: 200px;
+            backdrop-filter: blur(5px);
         }
     </style>
+    <!-- Import TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
+    <!-- Import handpose model -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.min.js"></script>
 </head>
 <body>
-    <!-- Header & Navigation -->
-    <header id="header">
-        <div class="container">
-            <nav>
-                <a href="#" class="logo"><i class="fas fa-mountain"></i> Mountain Romance</a>
-                <ul class="nav-links">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#gallery">Gallery</a></li>
-                    <li><a href="#couple">Our Story</a></li>
-                    <li><a href="#contact">Contact</a></li>
+    <div class="container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        <canvas id="outputCanvas"></canvas>
+        
+        <div class="controls">
+            <h1>👋 Hand Gesture Particles</h1>
+            <div class="status" id="status">Initializing camera...</div>
+            <div class="gesture-info">
+                <strong>Current Gesture: </strong><span id="gestureText">None detected</span>
+            </div>
+            <div class="gesture-list">
+                <strong>Gesture Commands:</strong>
+                <ul>
+                    <li>👆 Single finger - Move particles</li>
+                    <li>🔄 Rotate hand front to back - Create Circle</li>
+                    <li>💖 Rotate hand twice - Create Heart</li>
+                    <li>✊ Make fist - Clear shapes</li>
                 </ul>
-            </nav>
-        </div>
-    </header>
-    
-    <!-- Hero Section -->
-    <section class="hero" id="home">
-        <div class="hero-bg"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Mountain Night Romance</h1>
-            <p>Experience the breathtaking beauty of mountain nights and the magic of love under the starlit sky. Where nature's grandeur meets heartfelt moments.</p>
-            <a href="#gallery" class="cta-button">Explore the Beauty</a>
-        </div>
-    </section>
-    
-    <!-- Gallery Section -->
-    <section class="gallery" id="gallery">
-        <div class="container">
-            <h2 class="section-title">Stunning Mountain Nights</h2>
-            <div class="image-grid">
-                <div class="image-card">
-                    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Mountain night with stars">
-                    <div class="image-overlay">
-                        <h3>Starlit Peaks</h3>
-                        <p>A serene night with stars above the mountain range</p>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Northern lights over mountains">
-                    <div class="image-overlay">
-                        <h3>Aurora Majesty</h3>
-                        <p>Northern lights dancing over snow-capped mountains</p>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" alt="Mountain lake reflection">
-                    <div class="image-overlay">
-                        <h3>Mirror Lake</h3>
-                        <p>Perfect mountain reflection in a tranquil lake at night</p>
-                    </div>
-                </div>
             </div>
-            
-            <div class="image-credits">
-                <p>Images from <a href="https://unsplash.com" target="_blank">Unsplash</a>. Replace with your own images by updating the src attributes in the img tags.</p>
+            <button id="startButton">Start Camera</button>
+            <div class="particle-count">
+                <label for="particleSlider">Particle Count: <span id="particleCount">200</span></label>
+                <input type="range" id="particleSlider" min="50" max="500" value="200" step="10">
             </div>
         </div>
-    </section>
-    
-    <!-- Couple Section -->
-    <section class="couple-section" id="couple">
-        <div class="container">
-            <h2 class="section-title">Love in the Mountains</h2>
-            <div class="couple-container">
-                <div class="couple-image">
-                    <img src="https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80" alt="Couple watching sunset on mountains">
-                </div>
-                <div class="couple-content">
-                    <h2>Our Mountain Adventure</h2>
-                    <div class="stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <p>There's something magical about sharing a mountain vista with someone you love. The crisp night air, the endless stars, and the profound silence create moments that last a lifetime.</p>
-                    <p>Whether it's watching the sunset from a peak or cozying up by a campfire under the Milky Way, mountains have a way of bringing people closer together.</p>
-                    <div class="quote">
-                        "In every walk with nature, one receives far more than he seeks. And when shared with a loved one, the mountains gift us with memories that warm our souls forever."
-                    </div>
-                    <a href="#gallery" class="cta-button">View More Moments</a>
-                </div>
-            </div>
+        
+        <div class="debug" id="debugInfo">
+            <div>Landmarks: <span id="landmarkCount">0</span></div>
+            <div>FPS: <span id="fps">0</span></div>
         </div>
-    </section>
-    
-    <!-- Footer -->
-    <footer id="contact">
-        <div class="container">
-            <a href="#" class="logo"><i class="fas fa-mountain"></i> Mountain Romance</a>
-            <p>Celebrating love and nature's beauty in majestic mountain settings.</p>
-            
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-pinterest-p"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-            </div>
-            
-            <ul class="footer-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#gallery">Gallery</a></li>
-                <li><a href="#couple">Our Story</a></li>
-                <li><a href="#contact">Contact</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-            </ul>
-            
-            <p class="copyright">© 2023 Mountain Night Romance. All rights reserved. | Designed with <i class="fas fa-heart" style="color:#ff4757;"></i> for nature lovers</p>
+        
+        <div id="loading">
+            Loading hand detection model...
         </div>
-    </footer>
-    
-    <!-- Your existing JavaScript code -->
+    </div>
+
     <script>
-        // Header scroll effect
-        window.addEventListener('scroll', function() {
-            const header = document.getElementById('header');
-            if (window.scrollY > 50) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const outputCtx = outputCanvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        const gestureText = document.getElementById('gestureText');
+        const startButton = document.getElementById('startButton');
+        const loadingDiv = document.getElementById('loading');
+        const particleSlider = document.getElementById('particleSlider');
+        const particleCount = document.getElementById('particleCount');
+        const debugInfo = document.getElementById('debugInfo');
+        const landmarkCount = document.getElementById('landmarkCount');
+        const fpsDisplay = document.getElementById('fps');
+        
+        // Variables
+        let model = null;
+        let particles = [];
+        let isDetecting = false;
+        let lastGesture = 'none';
+        let gestureStartTime = 0;
+        let rotationCount = 0;
+        let lastRotationTime = 0;
+        let rotationDirection = 0; // -1 for clockwise, 1 for counterclockwise
+        let lastFrameTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+        
+        // Particle system configuration
+        const particleConfig = {
+            count: 200,
+            colors: ['#ff0080', '#00ff88', '#0080ff', '#ff8000'],
+            maxSpeed: 3,
+            size: 3
+        };
+        
+        // Initialize particles
+        function initParticles(count) {
+            particles = [];
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    color: particleConfig.colors[Math.floor(Math.random() * particleConfig.colors.length)],
+                    size: Math.random() * particleConfig.size + 1,
+                    targetX: null,
+                    targetY: null,
+                    shape: 'free', // 'free', 'circle', 'heart'
+                    shapeProgress: 0
+                });
             }
-        });
+        }
         
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href');
-                if(targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if(targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
+        // Update particles
+        function updateParticles(handData) {
+            if (!handData) {
+                // No hand detected - random movement
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // Bounce off walls
+                    if (p.x < 0 || p.x > window.innerWidth) p.vx *= -1;
+                    if (p.y < 0 || p.y > window.innerHeight) p.vy *= -1;
+                    
+                    // Add some randomness
+                    p.vx += (Math.random() - 0.5) * 0.1;
+                    p.vy += (Math.random() - 0.5) * 0.1;
+                    
+                    // Limit speed
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    if (speed > particleConfig.maxSpeed) {
+                        p.vx = (p.vx / speed) * particleConfig.maxSpeed;
+                        p.vy = (p.vy / speed) * particleConfig.maxSpeed;
+                    }
+                });
+                return;
+            }
+            
+            const landmarks = handData.landmarks;
+            const indexFingerTip = landmarks[8]; // Index finger tip
+            const middleFingerTip = landmarks[12]; // Middle finger tip
+            const ringFingerTip = landmarks[16]; // Ring finger tip
+            const pinkyTip = landmarks[20]; // Pinky tip
+            const wrist = landmarks[0]; // Wrist
+            
+            // Calculate hand center and orientation
+            const handCenter = {
+                x: landmarks.reduce((sum, lm) => sum + lm[0], 0) / landmarks.length,
+                y: landmarks.reduce((sum, lm) => sum + lm[1], 0) / landmarks.length
+            };
+            
+            // Map coordinates from video to screen
+            const screenX = (handCenter[0] / video.videoWidth) * window.innerWidth;
+            const screenY = (handCenter[1] / video.videoHeight) * window.innerHeight;
+            
+            // Detect gesture based on finger positions
+            const gesture = detectGesture(landmarks);
+            updateGestureDisplay(gesture);
+            
+            // Apply gesture effects
+            switch(gesture) {
+                case 'point':
+                    // Pointing - attract particles to finger
+                    particles.forEach(p => {
+                        const dx = screenX - p.x;
+                        const dy = screenY - p.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 300) {
+                            const force = 0.1;
+                            p.vx += (dx / distance) * force;
+                            p.vy += (dy / distance) * force;
+                        }
                     });
+                    break;
+                    
+                case 'circle':
+                    // Form a circle around hand
+                    createShape('circle', screenX, screenY, 150);
+                    break;
+                    
+                case 'heart':
+                    // Form a heart shape
+                    createShape('heart', screenX, screenY, 200);
+                    break;
+                    
+                case 'fist':
+                    // Clear shapes and scatter particles
+                    particles.forEach(p => {
+                        p.shape = 'free';
+                        p.shapeProgress = 0;
+                        // Add explosion effect
+                        p.vx += (Math.random() - 0.5) * 10;
+                        p.vy += (Math.random() - 0.5) * 10;
+                    });
+                    break;
+            }
+            
+            // Update particle positions
+            particles.forEach(p => {
+                if (p.shape === 'free') {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                } else {
+                    // Move towards shape
+                    p.shapeProgress += 0.02;
+                    if (p.shapeProgress > 1) p.shapeProgress = 1;
+                    
+                    const ease = p.shapeProgress < 0.5 ? 
+                        2 * p.shapeProgress * p.shapeProgress : 
+                        1 - Math.pow(-2 * p.shapeProgress + 2, 2) / 2;
+                    
+                    if (p.targetX !== null && p.targetY !== null) {
+                        p.x += (p.targetX - p.x) * 0.1 * ease;
+                        p.y += (p.targetY - p.y) * 0.1 * ease;
+                    }
                 }
+                
+                // Apply friction
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+                
+                // Keep particles on screen
+                if (p.x < 0) { p.x = 0; p.vx *= -1; }
+                if (p.x > window.innerWidth) { p.x = window.innerWidth; p.vx *= -1; }
+                if (p.y < 0) { p.y = 0; p.vy *= -1; }
+                if (p.y > window.innerHeight) { p.y = window.innerHeight; p.vy *= -1; }
             });
-        });
+        }
         
-        // Image hover effect enhancement
-        const imageCards = document.querySelectorAll('.image-card');
-        imageCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.zIndex = '10';
+        // Create shape with particles
+        function createShape(shape, centerX, centerY, radius) {
+            const angleStep = (2 * Math.PI) / particles.length;
+            
+            particles.forEach((p, i) => {
+                p.shape = shape;
+                p.shapeProgress = 0;
+                
+                let targetX, targetY;
+                const angle = angleStep * i;
+                
+                if (shape === 'circle') {
+                    targetX = centerX + Math.cos(angle) * radius;
+                    targetY = centerY + Math.sin(angle) * radius;
+                } else if (shape === 'heart') {
+                    // Heart shape parametric equation
+                    const t = angle;
+                    targetX = centerX + 16 * Math.pow(Math.sin(t), 3) * (radius / 20);
+                    targetY = centerY - (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * (radius / 20);
+                }
+                
+                p.targetX = targetX;
+                p.targetY = targetY;
+            });
+        }
+        
+        // Detect hand gesture
+        function detectGesture(landmarks) {
+            // Get key points
+            const thumbTip = landmarks[4];
+            const indexTip = landmarks[8];
+            const middleTip = landmarks[12];
+            const ringTip = landmarks[16];
+            const pinkyTip = landmarks[20];
+            const wrist = landmarks[0];
+            
+            // Calculate distances
+            const indexToWrist = distance3D(indexTip, wrist);
+            const middleToWrist = distance3D(middleTip, wrist);
+            const ringToWrist = distance3D(ringTip, wrist);
+            const pinkyToWrist = distance3D(pinkyTip, wrist);
+            const thumbToWrist = distance3D(thumbTip, wrist);
+            
+            // Gesture detection logic
+            
+            // Fist detection - all fingers close to wrist
+            if (indexToWrist < 0.2 && middleToWrist < 0.2 && 
+                ringToWrist < 0.2 && pinkyToWrist < 0.2) {
+                return 'fist';
+            }
+            
+            // Pointing gesture - only index finger extended
+            if (indexToWrist > 0.3 && middleToWrist < 0.2 && 
+                ringToWrist < 0.2 && pinkyToWrist < 0.2) {
+                return 'point';
+            }
+            
+            // Calculate hand rotation based on wrist and middle finger
+            const middleBase = landmarks[9];
+            const wristToMiddle = {
+                x: middleBase[0] - wrist[0],
+                y: middleBase[1] - wrist[1],
+                z: middleBase[2] - wrist[2]
+            };
+            
+            // Detect rotation front to back (z-axis movement)
+            const currentTime = Date.now();
+            if (wristToMiddle.z > 0.1) {
+                // Hand is facing forward
+                if (rotationDirection === -1 && currentTime - lastRotationTime < 1000) {
+                    rotationCount++;
+                    lastRotationTime = currentTime;
+                    
+                    if (rotationCount === 1) {
+                        // Single rotation - circle
+                        return 'circle';
+                    } else if (rotationCount >= 2) {
+                        // Double rotation - heart
+                        rotationCount = 0;
+                        return 'heart';
+                    }
+                }
+                rotationDirection = 1;
+            } else if (wristToMiddle.z < -0.1) {
+                // Hand is facing backward
+                if (rotationDirection === 1 && currentTime - lastRotationTime < 1000) {
+                    rotationDirection = -1;
+                    lastRotationTime = currentTime;
+                }
+            }
+            
+            // Reset rotation count if too much time has passed
+            if (currentTime - lastRotationTime > 1500) {
+                rotationCount = 0;
+            }
+            
+            return 'none';
+        }
+        
+        // Update gesture display
+        function updateGestureDisplay(gesture) {
+            if (gesture !== lastGesture) {
+                lastGesture = gesture;
+                gestureText.textContent = gesture;
+                
+                if (gesture === 'circle') {
+                    gestureText.innerHTML = '🔄 Circle';
+                } else if (gesture === 'heart') {
+                    gestureText.innerHTML = '💖 Heart';
+                } else if (gesture === 'point') {
+                    gestureText.innerHTML = '👆 Pointing';
+                } else if (gesture === 'fist') {
+                    gestureText.innerHTML = '✊ Fist';
+                } else {
+                    gestureText.innerHTML = 'None';
+                }
+            }
+        }
+        
+        // Draw particles
+        function drawParticles() {
+            outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+            
+            // Draw connections between nearby particles
+            outputCtx.strokeStyle = 'rgba(0, 255, 136, 0.2)';
+            outputCtx.lineWidth = 1;
+            
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 80) {
+                        outputCtx.beginPath();
+                        outputCtx.moveTo(particles[i].x, particles[i].y);
+                        outputCtx.lineTo(particles[j].x, particles[j].y);
+                        outputCtx.stroke();
+                    }
+                }
+            }
+            
+            // Draw particles
+            particles.forEach(p => {
+                outputCtx.beginPath();
+                outputCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                outputCtx.fillStyle = p.color;
+                outputCtx.fill();
+                
+                // Add glow effect
+                outputCtx.beginPath();
+                outputCtx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+                const gradient = outputCtx.createRadialGradient(
+                    p.x, p.y, p.size,
+                    p.x, p.y, p.size * 2
+                );
+                gradient.addColorStop(0, p.color);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                outputCtx.fillStyle = gradient;
+                outputCtx.fill();
+            });
+        }
+        
+        // Draw hand landmarks
+        function drawHand(landmarks) {
+            if (!landmarks) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#00ff88';
+            ctx.fillStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            
+            // Draw connections
+            const connections = [
+                [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
+                [0, 5], [5, 6], [6, 7], [7, 8], // Index
+                [0, 9], [9, 10], [10, 11], [11, 12], // Middle
+                [0, 13], [13, 14], [14, 15], [15, 16], // Ring
+                [0, 17], [17, 18], [18, 19], [19, 20] // Pinky
+            ];
+            
+            connections.forEach(([start, end]) => {
+                const startPoint = landmarks[start];
+                const endPoint = landmarks[end];
+                
+                ctx.beginPath();
+                ctx.moveTo(
+                    (startPoint[0] / video.videoWidth) * canvas.width,
+                    (startPoint[1] / video.videoHeight) * canvas.height
+                );
+                ctx.lineTo(
+                    (endPoint[0] / video.videoWidth) * canvas.width,
+                    (endPoint[1] / video.videoHeight) * canvas.height
+                );
+                ctx.stroke();
             });
             
-            card.addEventListener('mouseleave', function() {
-                this.style.zIndex = '1';
+            // Draw landmarks
+            landmarks.forEach(landmark => {
+                ctx.beginPath();
+                ctx.arc(
+                    (landmark[0] / video.videoWidth) * canvas.width,
+                    (landmark[1] / video.videoHeight) * canvas.height,
+                    3, 0, Math.PI * 2
+                );
+                ctx.fill();
             });
+        }
+        
+        // Calculate 3D distance
+        function distance3D(point1, point2) {
+            const dx = point1[0] - point2[0];
+            const dy = point1[1] - point2[1];
+            const dz = point1[2] - point2[2];
+            return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        }
+        
+        // Update FPS counter
+        function updateFPS(currentTime) {
+            frameCount++;
+            if (currentTime - lastFrameTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = currentTime;
+                fpsDisplay.textContent = fps;
+            }
+        }
+        
+        // Main detection loop
+        async function detectHand() {
+            if (!isDetecting || !model) return;
+            
+            const currentTime = performance.now();
+            updateFPS(currentTime);
+            
+            // Get predictions
+            const predictions = await model.estimateHands(video);
+            
+            if (predictions.length > 0) {
+                const hand = predictions[0];
+                landmarkCount.textContent = hand.landmarks.length;
+                
+                // Draw hand landmarks
+                drawHand(hand.landmarks);
+                
+                // Update particles based on hand
+                updateParticles(hand);
+            } else {
+                // No hand detected
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                landmarkCount.textContent = '0';
+                updateParticles(null);
+            }
+            
+            // Draw particles
+            drawParticles();
+            
+            // Continue loop
+            requestAnimationFrame(detectHand);
+        }
+        
+        // Start camera
+        async function startCamera() {
+            try {
+                loadingDiv.style.display = 'block';
+                statusDiv.textContent = 'Starting camera...';
+                
+                // Get camera stream
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }
+                });
+                
+                video.srcObject = stream;
+                
+                // Wait for video to load
+                await new Promise(resolve => {
+                    video.onloadedmetadata = resolve;
+                });
+                
+                video.play();
+                
+                // Set canvas dimensions
+                canvas.width = outputCanvas.width = window.innerWidth;
+                canvas.height = outputCanvas.height = window.innerHeight;
+                
+                // Load handpose model
+                statusDiv.textContent = 'Loading hand detection model...';
+                model = await handpose.load();
+                
+                // Initialize particles
+                initParticles(particleConfig.count);
+                
+                // Start detection
+                isDetecting = true;
+                detectHand();
+                
+                // Update UI
+                loadingDiv.style.display = 'none';
+                statusDiv.textContent = 'Camera active - Show your hand!';
+                startButton.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error starting camera:', error);
+                statusDiv.textContent = `Error: ${error.message}`;
+                loadingDiv.style.display = 'none';
+            }
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = outputCanvas.width = window.innerWidth;
+            canvas.height = outputCanvas.height = window.innerHeight;
         });
-    </script>
-    
-    <!-- Step 2: AutoTag Script - Place after the library script -->
-    <script type="text/javascript">
-        aclib.runAutoTag({
-            zoneId: 'gaq1q8qnkg',
+        
+        // Particle count slider
+        particleSlider.addEventListener('input', () => {
+            const count = parseInt(particleSlider.value);
+            particleCount.textContent = count;
+            particleConfig.count = count;
+            initParticles(count);
         });
+        
+        // Start button
+        startButton.addEventListener('click', startCamera);
+        
+        // Initial setup
+        initParticles(particleConfig.count);
+        loadingDiv.style.display = 'block';
+        
+        // Try to auto-start on page load
+        setTimeout(() => {
+            if (!model) {
+                loadingDiv.style.display = 'none';
+                statusDiv.textContent = 'Click "Start Camera" to begin';
+            }
+        }, 3000);
     </script>
 </body>
-            </html>
+</html>
